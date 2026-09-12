@@ -2,10 +2,13 @@ package postgres
 
 import (
 	"context"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Pool struct{ *pgxpool.Pool }
+type Pool struct {
+	*pgxpool.Pool
+}
 
 func NewPool(ctx context.Context, databaseURL string) (*Pool, error) {
 	pool, err := pgxpool.New(ctx, databaseURL)
