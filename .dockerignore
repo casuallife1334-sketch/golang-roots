@@ -1,0 +1,7 @@
+.git
+.github
+.env
+out
+*.log
+README.md
+already-done.md

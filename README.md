@@ -12,6 +12,24 @@ make migrate-up
 make run
 ```
 
+## Запуск в Docker
+
+Сборка приложения выполняется multi-stage Dockerfile из `cmd/genealogy/Dockerfile`.
+Для запуска PostgreSQL, MinIO, миграций и API в контейнерах:
+
+```sh
+cp .env.example .env
+make docker-deploy
+```
+
+API будет доступен по адресу `http://localhost:8080`. Остановить контейнеры можно командой:
+
+```sh
+make docker-down
+```
+
+Внутри Docker приложение подключается к PostgreSQL по имени сервиса `postgres`, а к MinIO по имени `minio`. Логи приложения сохраняются в `out/logs`.
+
 Для полного удаления контейнеров и volumes окружения используй `make env-cleanup` и подтверди операцию символом `y`.
 
 ## MinIO и фотографии
