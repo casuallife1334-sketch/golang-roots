@@ -8,6 +8,19 @@ import (
 
 const maxPhotoSize = 10 << 20
 
+// UploadPersonPhoto godoc
+// @Summary Загрузка фотографии человека
+// @Description Загрузка или замена фотографии человека, максимальный размер 10 MB
+// @Tags persons
+// @Accept mpfd
+// @Produce json
+// @Param id path string true "ULID человека"
+// @Param file formData file true "Фотография человека"
+// @Success 200 {object} PersonResponse "Фотография успешно загружена"
+// @Failure 400 {object} corehttp.ErrorResponse "Bad Request"
+// @Failure 404 {object} corehttp.ErrorResponse "Person not found"
+// @Failure 500 {object} corehttp.ErrorResponse "internal server error"
+// @Router /persons/{id}/photo [post]
 func (h *PersonsHTTPHandler) UploadPersonPhoto(w http.ResponseWriter, r *http.Request) {
 	id, err := request.GetULIDPathValue(r, "id")
 	if err != nil {

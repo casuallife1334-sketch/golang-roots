@@ -12,6 +12,7 @@ var ErrInvalid = fmt.Errorf("%w: invalid relationship input", coreerrors.ErrInva
 type RelationshipsRepository interface {
 	CreateRelationship(context.Context, domain.CreateRelationshipInput) (domain.Relationship, error)
 	GetRelationship(context.Context, string) (domain.Relationship, error)
+	GetRelationships(context.Context, string) ([]domain.Relationship, error)
 	DeleteRelationship(context.Context, string) error
 }
 

@@ -1,0 +1,529 @@
+basePath: /api/v1
+definitions:
+  genealogy-tree_internal_core_domain.Gender:
+    enum:
+    - male
+    - female
+    - other
+    type: string
+    x-enum-varnames:
+    - GenderMale
+    - GenderFemale
+    - GenderOther
+  genealogy-tree_internal_core_domain.PatchPersonInput:
+    properties:
+      birth_date:
+        type: string
+      death_date:
+        type: string
+      first_name:
+        type: string
+      gender:
+        $ref: '#/definitions/genealogy-tree_internal_core_domain.Gender'
+      last_name:
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      photo_url:
+        type: string
+    type: object
+  genealogy-tree_internal_core_domain.RelationshipDirection:
+    enum:
+    - parent
+    - child
+    type: string
+    x-enum-varnames:
+    - DirectionParent
+    - DirectionChild
+  genealogy-tree_internal_core_domain.RelationshipType:
+    enum:
+    - parent_child
+    - spouse
+    type: string
+    x-enum-varnames:
+    - RelationshipParentChild
+    - RelationshipSpouse
+  genealogy-tree_internal_core_transport_http_response.ErrorResponse:
+    properties:
+      error:
+        example: full error text
+        type: string
+      message:
+        example: short human-readable message
+        type: string
+    type: object
+  internal_features_persons_transport_http.CreatePersonRequest:
+    properties:
+      birth_date:
+        example: "1980-01-02T00:00:00Z"
+        type: string
+      death_date:
+        example: "2024-05-10T00:00:00Z"
+        type: string
+      first_name:
+        example: Ivan
+        type: string
+      gender:
+        allOf:
+        - $ref: '#/definitions/genealogy-tree_internal_core_domain.Gender'
+        example: male
+      last_name:
+        example: Petrov
+        type: string
+      metadata:
+        $ref: '#/definitions/internal_features_persons_transport_http.MetadataExample'
+      photo_url:
+        example: persons/01JQ2Q4K7Y8F6M2Z3N4P5R6S7T/photo
+        type: string
+    type: object
+  internal_features_persons_transport_http.MetadataExample:
+    properties:
+      city:
+        example: Moscow
+        type: string
+      occupation:
+        example: Engineer
+        type: string
+    type: object
+  internal_features_persons_transport_http.PersonResponse:
+    properties:
+      birth_date:
+        example: "1980-01-02T00:00:00Z"
+        type: string
+      created_at:
+        example: "2026-02-26T10:30:00Z"
+        type: string
+      death_date:
+        example: "2024-05-10T00:00:00Z"
+        type: string
+      first_name:
+        example: Ivan
+        type: string
+      gender:
+        allOf:
+        - $ref: '#/definitions/genealogy-tree_internal_core_domain.Gender'
+        example: male
+      id:
+        example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
+        type: string
+      last_name:
+        example: Petrov
+        type: string
+      metadata:
+        $ref: '#/definitions/internal_features_persons_transport_http.MetadataExample'
+      photo_url:
+        example: persons/01JQ2Q4K7Y8F6M2Z3N4P5R6S7T/photo
+        type: string
+      updated_at:
+        example: "2026-02-26T10:30:00Z"
+        type: string
+    type: object
+  internal_features_relationships_transport_http.CreateRelationshipRequest:
+    properties:
+      direction:
+        allOf:
+        - $ref: '#/definitions/genealogy-tree_internal_core_domain.RelationshipDirection'
+        example: parent
+      person1_id:
+        example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
+        type: string
+      person2_id:
+        example: 01JQ2Q4K8Z8F6M2Z3N4P5R6S7U
+        type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/genealogy-tree_internal_core_domain.RelationshipType'
+        example: parent_child
+    type: object
+  internal_features_relationships_transport_http.RelationshipResponse:
+    properties:
+      created_at:
+        example: "2026-02-26T10:30:00Z"
+        type: string
+      direction:
+        allOf:
+        - $ref: '#/definitions/genealogy-tree_internal_core_domain.RelationshipDirection'
+        example: parent
+      id:
+        example: 01JQ2Q4K9Y8F6M2Z3N4P5R6S7V
+        type: string
+      person1_id:
+        example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
+        type: string
+      person2_id:
+        example: 01JQ2Q4K8Z8F6M2Z3N4P5R6S7U
+        type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/genealogy-tree_internal_core_domain.RelationshipType'
+        example: parent_child
+    type: object
+host: 127.0.0.1:8080
+info:
+  contact: {}
+  description: Genealogy Tree REST API
+  title: Genealogy Tree API
+  version: "1.0"
+paths:
+  /persons:
+    get:
+      description: Получение списка людей в генеалогическом дереве
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное получение списка людей
+          schema:
+            items:
+              $ref: '#/definitions/internal_features_persons_transport_http.PersonResponse'
+            type: array
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Список людей
+      tags:
+      - persons
+    post:
+      consumes:
+      - application/json
+      description: Создание нового человека в генеалогическом дереве
+      parameters:
+      - description: CreatePerson тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_persons_transport_http.CreatePersonRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Успешно созданный человек
+          schema:
+            $ref: '#/definitions/internal_features_persons_transport_http.PersonResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Создание человека
+      tags:
+      - persons
+  /persons/{id}:
+    delete:
+      description: Удаление человека и связанных с ним relationships
+      parameters:
+      - description: ULID удаляемого человека
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Успешное удаление человека
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Person not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Удаление человека
+      tags:
+      - persons
+    get:
+      description: Получение конкретного человека по ULID
+      parameters:
+      - description: ULID получаемого человека
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Человек успешно найден
+          schema:
+            $ref: '#/definitions/internal_features_persons_transport_http.PersonResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Person not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Получение человека
+      tags:
+      - persons
+    patch:
+      consumes:
+      - application/json
+      description: Изменение информации о существующем человеке
+      parameters:
+      - description: ULID изменяемого человека
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: PatchPerson тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/genealogy-tree_internal_core_domain.PatchPersonInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешно изменённый человек
+          schema:
+            $ref: '#/definitions/internal_features_persons_transport_http.PersonResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Person not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Изменение человека
+      tags:
+      - persons
+  /persons/{id}/photo:
+    delete:
+      description: Удаление фотографии человека из хранилища
+      parameters:
+      - description: ULID человека
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Фотография успешно удалена
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Person not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Удаление фотографии человека
+      tags:
+      - persons
+    get:
+      description: Получение бинарного содержимого фотографии человека
+      parameters:
+      - description: ULID человека
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: Фотография человека
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Person photo not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Получение фотографии человека
+      tags:
+      - persons
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загрузка или замена фотографии человека, максимальный размер 10
+        MB
+      parameters:
+      - description: ULID человека
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Фотография человека
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Фотография успешно загружена
+          schema:
+            $ref: '#/definitions/internal_features_persons_transport_http.PersonResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Person not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Загрузка фотографии человека
+      tags:
+      - persons
+  /relationships:
+    get:
+      description: Получение всех связей с опциональной фильтрацией по ULID человека
+      parameters:
+      - description: Фильтрация связей по ULID человека
+        in: query
+        name: person_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное получение списка связей
+          schema:
+            items:
+              $ref: '#/definitions/internal_features_relationships_transport_http.RelationshipResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Список связей
+      tags:
+      - relationships
+    post:
+      consumes:
+      - application/json
+      description: Создание новой связи между двумя людьми
+      parameters:
+      - description: CreateRelationship тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_relationships_transport_http.CreateRelationshipRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Успешно созданная связь
+          schema:
+            $ref: '#/definitions/internal_features_relationships_transport_http.RelationshipResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Person not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Создание связи
+      tags:
+      - relationships
+  /relationships/{id}:
+    delete:
+      description: Удаление существующей связи по ULID
+      parameters:
+      - description: ULID удаляемой связи
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Успешное удаление связи
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Relationship not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Удаление связи
+      tags:
+      - relationships
+    get:
+      description: Получение конкретной связи по ULID
+      parameters:
+      - description: ULID получаемой связи
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Связь успешно найдена
+          schema:
+            $ref: '#/definitions/internal_features_relationships_transport_http.RelationshipResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Relationship not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Получение связи
+      tags:
+      - relationships
+swagger: "2.0"

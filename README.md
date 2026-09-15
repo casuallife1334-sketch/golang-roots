@@ -30,6 +30,16 @@ make docker-down
 
 Внутри Docker приложение подключается к PostgreSQL по имени сервиса `postgres`, а к MinIO по имени `minio`. Логи приложения сохраняются в `out/logs`.
 
+## Swagger
+
+Swagger-документация генерируется из комментариев над HTTP handlers:
+
+```sh
+make swagger-gen
+```
+
+После запуска приложения Swagger UI доступен по адресу `http://localhost:8080/swagger/`, а JSON-схема - по адресу `http://localhost:8080/swagger/doc.json`.
+
 Для полного удаления контейнеров и volumes окружения используй `make env-cleanup` и подтверди операцию символом `y`.
 
 ## MinIO и фотографии
@@ -157,4 +167,20 @@ API использует префикс `/api/v1`:
 
 `GET /api/v1/relationships/{id}` - получить связь. Тело не требуется.
 
+`GET /api/v1/relationships` - получить все связи. Для фильтрации по конкретному человеку передайте его ULID:
+
+```http
+GET /api/v1/relationships?person_id=01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
+```
+
 `DELETE /api/v1/relationships/{id}` - удалить связь. Тело не требуется.
+
+## Управление Swagger
+
+Сгенерировать Swagger-документацию из комментариев над handlers:
+
+```sh
+make swagger-gen
+```
+
+Swagger UI доступен по адресу `http://localhost:8080/swagger/`, JSON-схема - по адресу `http://localhost:8080/swagger/doc.json`.
