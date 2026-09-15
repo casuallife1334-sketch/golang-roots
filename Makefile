@@ -6,7 +6,21 @@ export
 export PROJECT_ROOT := $(shell pwd)
 
 env-up:
-	@docker compose up -d postgres minio
+	@docker compose up -d --wait postgres minio
+
+docker-up:
+	@docker compose up -d --build genealogy
+
+docker-down:
+	@docker compose down
+
+swagger-gen:
+	@docker compose run --rm swagger \
+		init \
+		-g cmd/genealogy/main.go \
+		-o docs \
+		--parseInternal \
+		--parseDependency
 
 env-down:
 	@docker compose down
@@ -36,6 +50,10 @@ migrate-action:
 		-path /migrations \
 		-database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable \
 		"$(action)"
+
+docker-deploy: env-up
+	@make migrate-up
+	@make docker-up
 
 run:
 	@LOGGER_FOLDER="$(PROJECT_ROOT)/out/logs" go run ./cmd/genealogy
