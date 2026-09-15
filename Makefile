@@ -14,6 +14,14 @@ docker-up:
 docker-down:
 	@docker compose down
 
+swagger-gen:
+	@docker compose run --rm swagger \
+		init \
+		-g cmd/genealogy/main.go \
+		-o docs \
+		--parseInternal \
+		--parseDependency
+
 env-down:
 	@docker compose down
 
