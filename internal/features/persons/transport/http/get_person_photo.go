@@ -10,6 +10,17 @@ import (
 	"net/http"
 )
 
+// GetPersonPhoto godoc
+// @Summary Получение фотографии человека
+// @Description Получение бинарного содержимого фотографии человека
+// @Tags persons
+// @Produce application/octet-stream
+// @Param id path string true "ULID человека"
+// @Success 200 {file} binary "Фотография человека"
+// @Failure 400 {object} corehttp.ErrorResponse "Bad Request"
+// @Failure 404 {object} corehttp.ErrorResponse "Person photo not found"
+// @Failure 500 {object} corehttp.ErrorResponse "internal server error"
+// @Router /persons/{id}/photo [get]
 func (h *PersonsHTTPHandler) GetPersonPhoto(w http.ResponseWriter, r *http.Request) {
 	id, err := request.GetULIDPathValue(r, "id")
 	if err != nil {

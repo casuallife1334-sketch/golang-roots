@@ -10,6 +10,19 @@ import (
 	"net/http"
 )
 
+// PatchPerson godoc
+// @Summary Изменение человека
+// @Description Изменение информации о существующем человеке
+// @Tags persons
+// @Accept json
+// @Produce json
+// @Param id path string true "ULID изменяемого человека"
+// @Param request body domain.PatchPersonInput true "PatchPerson тело запроса"
+// @Success 200 {object} PersonResponse "Успешно изменённый человек"
+// @Failure 400 {object} corehttp.ErrorResponse "Bad Request"
+// @Failure 404 {object} corehttp.ErrorResponse "Person not found"
+// @Failure 500 {object} corehttp.ErrorResponse "internal server error"
+// @Router /persons/{id} [patch]
 func (h *PersonsHTTPHandler) PatchPerson(w http.ResponseWriter, r *http.Request) {
 	id, err := request.GetULIDPathValue(r, "id")
 	if err != nil {

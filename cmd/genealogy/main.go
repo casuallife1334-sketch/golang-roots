@@ -21,8 +21,15 @@ import (
 	relhttp "genealogy-tree/internal/features/relationships/transport/http"
 
 	"go.uber.org/zap"
+
+	_ "genealogy-tree/docs"
 )
 
+// @title 		Genealogy Tree API
+// @version 	1.0
+// @description Genealogy Tree REST API
+// @host 		127.0.0.1:8080
+// @BasePath 	/api/v1
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
@@ -88,6 +95,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	}})
+	server.RegisterSwagger()
 
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),

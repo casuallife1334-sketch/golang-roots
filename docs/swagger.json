@@ -1,0 +1,795 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Genealogy Tree REST API",
+        "title": "Genealogy Tree API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "127.0.0.1:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/persons": {
+            "get": {
+                "description": "Получение списка людей в генеалогическом дереве",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "persons"
+                ],
+                "summary": "Список людей",
+                "responses": {
+                    "200": {
+                        "description": "Успешное получение списка людей",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_features_persons_transport_http.PersonResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создание нового человека в генеалогическом дереве",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "persons"
+                ],
+                "summary": "Создание человека",
+                "parameters": [
+                    {
+                        "description": "CreatePerson тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_persons_transport_http.CreatePersonRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Успешно созданный человек",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_persons_transport_http.PersonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/persons/{id}": {
+            "get": {
+                "description": "Получение конкретного человека по ULID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "persons"
+                ],
+                "summary": "Получение человека",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID получаемого человека",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Человек успешно найден",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_persons_transport_http.PersonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Person not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаление человека и связанных с ним relationships",
+                "tags": [
+                    "persons"
+                ],
+                "summary": "Удаление человека",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID удаляемого человека",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Успешное удаление человека"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Person not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Изменение информации о существующем человеке",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "persons"
+                ],
+                "summary": "Изменение человека",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID изменяемого человека",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "PatchPerson тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_domain.PatchPersonInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешно изменённый человек",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_persons_transport_http.PersonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Person not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/persons/{id}/photo": {
+            "get": {
+                "description": "Получение бинарного содержимого фотографии человека",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "persons"
+                ],
+                "summary": "Получение фотографии человека",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID человека",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Фотография человека",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Person photo not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Загрузка или замена фотографии человека, максимальный размер 10 MB",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "persons"
+                ],
+                "summary": "Загрузка фотографии человека",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID человека",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Фотография человека",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Фотография успешно загружена",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_persons_transport_http.PersonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Person not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаление фотографии человека из хранилища",
+                "tags": [
+                    "persons"
+                ],
+                "summary": "Удаление фотографии человека",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID человека",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Фотография успешно удалена"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Person not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/relationships": {
+            "get": {
+                "description": "Получение всех связей с опциональной фильтрацией по ULID человека",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "relationships"
+                ],
+                "summary": "Список связей",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Фильтрация связей по ULID человека",
+                        "name": "person_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное получение списка связей",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_features_relationships_transport_http.RelationshipResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создание новой связи между двумя людьми",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "relationships"
+                ],
+                "summary": "Создание связи",
+                "parameters": [
+                    {
+                        "description": "CreateRelationship тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_relationships_transport_http.CreateRelationshipRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Успешно созданная связь",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_relationships_transport_http.RelationshipResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Person not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/relationships/{id}": {
+            "get": {
+                "description": "Получение конкретной связи по ULID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "relationships"
+                ],
+                "summary": "Получение связи",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID получаемой связи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Связь успешно найдена",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_relationships_transport_http.RelationshipResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Relationship not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаление существующей связи по ULID",
+                "tags": [
+                    "relationships"
+                ],
+                "summary": "Удаление связи",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID удаляемой связи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Успешное удаление связи"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Relationship not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "genealogy-tree_internal_core_domain.Gender": {
+            "type": "string",
+            "enum": [
+                "male",
+                "female",
+                "other"
+            ],
+            "x-enum-varnames": [
+                "GenderMale",
+                "GenderFemale",
+                "GenderOther"
+            ]
+        },
+        "genealogy-tree_internal_core_domain.PatchPersonInput": {
+            "type": "object",
+            "properties": {
+                "birth_date": {
+                    "type": "string"
+                },
+                "death_date": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "$ref": "#/definitions/genealogy-tree_internal_core_domain.Gender"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "photo_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "genealogy-tree_internal_core_domain.RelationshipDirection": {
+            "type": "string",
+            "enum": [
+                "parent",
+                "child"
+            ],
+            "x-enum-varnames": [
+                "DirectionParent",
+                "DirectionChild"
+            ]
+        },
+        "genealogy-tree_internal_core_domain.RelationshipType": {
+            "type": "string",
+            "enum": [
+                "parent_child",
+                "spouse"
+            ],
+            "x-enum-varnames": [
+                "RelationshipParentChild",
+                "RelationshipSpouse"
+            ]
+        },
+        "genealogy-tree_internal_core_transport_http_response.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "full error text"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "short human-readable message"
+                }
+            }
+        },
+        "internal_features_persons_transport_http.CreatePersonRequest": {
+            "type": "object",
+            "properties": {
+                "birth_date": {
+                    "type": "string",
+                    "example": "1980-01-02T00:00:00Z"
+                },
+                "death_date": {
+                    "type": "string",
+                    "example": "2024-05-10T00:00:00Z"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "Ivan"
+                },
+                "gender": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_domain.Gender"
+                        }
+                    ],
+                    "example": "male"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Petrov"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/internal_features_persons_transport_http.MetadataExample"
+                },
+                "photo_url": {
+                    "type": "string",
+                    "example": "persons/01JQ2Q4K7Y8F6M2Z3N4P5R6S7T/photo"
+                }
+            }
+        },
+        "internal_features_persons_transport_http.MetadataExample": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "Moscow"
+                },
+                "occupation": {
+                    "type": "string",
+                    "example": "Engineer"
+                }
+            }
+        },
+        "internal_features_persons_transport_http.PersonResponse": {
+            "type": "object",
+            "properties": {
+                "birth_date": {
+                    "type": "string",
+                    "example": "1980-01-02T00:00:00Z"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-02-26T10:30:00Z"
+                },
+                "death_date": {
+                    "type": "string",
+                    "example": "2024-05-10T00:00:00Z"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "Ivan"
+                },
+                "gender": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_domain.Gender"
+                        }
+                    ],
+                    "example": "male"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K7Y8F6M2Z3N4P5R6S7T"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Petrov"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/internal_features_persons_transport_http.MetadataExample"
+                },
+                "photo_url": {
+                    "type": "string",
+                    "example": "persons/01JQ2Q4K7Y8F6M2Z3N4P5R6S7T/photo"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-02-26T10:30:00Z"
+                }
+            }
+        },
+        "internal_features_relationships_transport_http.CreateRelationshipRequest": {
+            "type": "object",
+            "properties": {
+                "direction": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_domain.RelationshipDirection"
+                        }
+                    ],
+                    "example": "parent"
+                },
+                "person1_id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K7Y8F6M2Z3N4P5R6S7T"
+                },
+                "person2_id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K8Z8F6M2Z3N4P5R6S7U"
+                },
+                "type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_domain.RelationshipType"
+                        }
+                    ],
+                    "example": "parent_child"
+                }
+            }
+        },
+        "internal_features_relationships_transport_http.RelationshipResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-02-26T10:30:00Z"
+                },
+                "direction": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_domain.RelationshipDirection"
+                        }
+                    ],
+                    "example": "parent"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K9Y8F6M2Z3N4P5R6S7V"
+                },
+                "person1_id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K7Y8F6M2Z3N4P5R6S7T"
+                },
+                "person2_id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K8Z8F6M2Z3N4P5R6S7U"
+                },
+                "type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_domain.RelationshipType"
+                        }
+                    ],
+                    "example": "parent_child"
+                }
+            }
+        }
+    }
+}

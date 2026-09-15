@@ -7,6 +7,17 @@ import (
 	"net/http"
 )
 
+// CreatePerson godoc
+// @Summary 	Создание человека
+// @Description Создание нового человека в генеалогическом дереве
+// @Tags 		persons
+// @Accept 		json
+// @Produce 	json
+// @Param 		request body CreatePersonRequest true "CreatePerson тело запроса"
+// @Success 	201 {object} PersonResponse "Успешно созданный человек"
+// @Failure 	400 {object} corehttp.ErrorResponse "Bad Request"
+// @Failure 	500 {object} corehttp.ErrorResponse "internal server error"
+// @Router 		/persons [post]
 func (h *PersonsHTTPHandler) CreatePerson(w http.ResponseWriter, r *http.Request) {
 	var input domain.CreatePersonInput
 	if err := request.DecodeJSON(r, &input); err != nil {

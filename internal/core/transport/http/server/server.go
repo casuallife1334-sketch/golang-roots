@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"genealogy-tree/docs"
 	corelogger "genealogy-tree/internal/core/logger"
 	"genealogy-tree/internal/core/transport/http/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -30,6 +32,21 @@ func (s *HTTPServer) RegisterRoutes(routes ...Route) {
 	for _, route := range routes {
 		s.mux.Handle(fmt.Sprintf("%s %s", route.Method, route.Path), route.WithMiddleware())
 	}
+}
+
+func (s *HTTPServer) RegisterSwagger() {
+	s.mux.Handle(
+		"/swagger/",
+		httpSwagger.Handler(
+			httpSwagger.URL("/swagger/doc.json"),
+			httpSwagger.DefaultModelsExpandDepth(-1),
+		),
+	)
+	s.mux.HandleFunc("/swagger/doc.json", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(docs.SwaggerInfo.ReadDoc()))
+	})
 }
 func (s *HTTPServer) Run(ctx context.Context) error {
 	httpServer := &http.Server{Addr: s.config.Addr, Handler: middleware.ChainMiddleware(s.mux, s.middleware...)}

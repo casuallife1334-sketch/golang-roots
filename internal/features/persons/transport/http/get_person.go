@@ -8,6 +8,17 @@ import (
 	"net/http"
 )
 
+// GetPerson godoc
+// @Summary Получение человека
+// @Description Получение конкретного человека по ULID
+// @Tags persons
+// @Produce json
+// @Param id path string true "ULID получаемого человека"
+// @Success 200 {object} PersonResponse "Человек успешно найден"
+// @Failure 400 {object} corehttp.ErrorResponse "Bad Request"
+// @Failure 404 {object} corehttp.ErrorResponse "Person not found"
+// @Failure 500 {object} corehttp.ErrorResponse "internal server error"
+// @Router /persons/{id} [get]
 func (h *PersonsHTTPHandler) GetPerson(w http.ResponseWriter, r *http.Request) {
 	id, err := request.GetULIDPathValue(r, "id")
 	if err != nil {

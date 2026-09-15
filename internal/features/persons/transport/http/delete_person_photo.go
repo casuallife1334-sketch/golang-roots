@@ -8,6 +8,16 @@ import (
 	"net/http"
 )
 
+// DeletePersonPhoto godoc
+// @Summary Удаление фотографии человека
+// @Description Удаление фотографии человека из хранилища
+// @Tags persons
+// @Param id path string true "ULID человека"
+// @Success 204 "Фотография успешно удалена"
+// @Failure 400 {object} corehttp.ErrorResponse "Bad Request"
+// @Failure 404 {object} corehttp.ErrorResponse "Person not found"
+// @Failure 500 {object} corehttp.ErrorResponse "internal server error"
+// @Router /persons/{id}/photo [delete]
 func (h *PersonsHTTPHandler) DeletePersonPhoto(w http.ResponseWriter, r *http.Request) {
 	id, err := request.GetULIDPathValue(r, "id")
 	if err != nil {
