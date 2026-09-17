@@ -22,6 +22,9 @@ type Config struct {
 	MinIOSecretKey      string
 	MinIOBucket         string
 	MinIOUseSSL         bool
+	JWTSecret           string
+	JWTIssuer           string
+	JWTAccessTTL        time.Duration
 }
 
 func Load() (Config, error) {
@@ -38,9 +41,15 @@ func Load() (Config, error) {
 		MinIOSecretKey:   env("MINIO_SECRET_KEY", "minioadmin"),
 		MinIOBucket:      env("MINIO_BUCKET", "genealogy"),
 		MinIOUseSSL:      boolEnv("MINIO_USE_SSL", false),
+		JWTSecret:        os.Getenv("JWT_SECRET"),
+		JWTIssuer:        env("JWT_ISSUER", "genealogy-tree"),
+		JWTAccessTTL:     durationEnv("JWT_ACCESS_TTL", 15*time.Minute),
 	}
 	if c.DatabaseUser == "" || c.DatabaseName == "" {
 		return Config{}, fmt.Errorf("POSTGRES_USER and POSTGRES_DB are required")
+	}
+	if c.JWTSecret == "" {
+		return Config{}, fmt.Errorf("JWT_SECRET is required")
 	}
 	return c, nil
 }
