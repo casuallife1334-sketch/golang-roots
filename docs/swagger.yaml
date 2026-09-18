@@ -53,6 +53,51 @@ definitions:
         example: short human-readable message
         type: string
     type: object
+  internal_features_auth_transport_http.LoginRequest:
+    properties:
+      email:
+        example: ivan@example.com
+        type: string
+      password:
+        example: strong-password
+        type: string
+    type: object
+  internal_features_auth_transport_http.LoginResponse:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      expires_in:
+        example: 900
+        type: integer
+      token_type:
+        example: Bearer
+        type: string
+    type: object
+  internal_features_auth_transport_http.RegisterRequest:
+    properties:
+      email:
+        example: ivan@example.com
+        type: string
+      password:
+        example: strong-password
+        type: string
+    type: object
+  internal_features_auth_transport_http.RegisterResponse:
+    properties:
+      created_at:
+        example: "2026-02-26T10:30:00Z"
+        type: string
+      email:
+        example: ivan@example.com
+        type: string
+      id:
+        example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
+        type: string
+      updated_at:
+        example: "2026-02-26T10:30:00Z"
+        type: string
+    type: object
   internal_features_persons_transport_http.CreatePersonRequest:
     properties:
       birth_date:
@@ -159,6 +204,21 @@ definitions:
         - $ref: '#/definitions/genealogy-tree_internal_core_domain.RelationshipType'
         example: parent_child
     type: object
+  internal_features_users_transport_http.UserResponse:
+    properties:
+      created_at:
+        example: "2026-02-26T10:30:00Z"
+        type: string
+      email:
+        example: ivan@example.com
+        type: string
+      id:
+        example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
+        type: string
+      updated_at:
+        example: "2026-02-26T10:30:00Z"
+        type: string
+    type: object
 host: 127.0.0.1:8080
 info:
   contact: {}
@@ -166,6 +226,74 @@ info:
   title: Genealogy Tree API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Проверка email и пароля с выдачей access JWT
+      parameters:
+      - description: Login тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_auth_transport_http.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешный вход
+          schema:
+            $ref: '#/definitions/internal_features_auth_transport_http.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Вход пользователя
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Создание нового аккаунта пользователя
+      parameters:
+      - description: Register тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_auth_transport_http.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Успешная регистрация
+          schema:
+            $ref: '#/definitions/internal_features_auth_transport_http.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "409":
+          description: Email already exists
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Регистрация пользователя
+      tags:
+      - auth
   /persons:
     get:
       description: Получение списка людей в генеалогическом дереве
@@ -526,4 +654,34 @@ paths:
       summary: Получение связи
       tags:
       - relationships
+  /users/me:
+    get:
+      description: Получение профиля пользователя по идентификатору из access JWT
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Текущий пользователь
+          schema:
+            $ref: '#/definitions/internal_features_users_transport_http.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      summary: Получение текущего пользователя
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

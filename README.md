@@ -30,6 +30,24 @@ make docker-down
 
 Внутри Docker приложение подключается к PostgreSQL по имени сервиса `postgres`, а к MinIO по имени `minio`. Логи приложения сохраняются в `out/logs`.
 
+## Авторизация
+
+Минимальная авторизация использует email, bcrypt и access JWT:
+
+```http
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+GET /api/v1/users/me
+```
+
+Регистрация и вход принимают JSON с полями `email` и `password`. Для защищённых endpoints передавай токен в заголовке:
+
+```http
+Authorization: Bearer {access_token}
+```
+
+Access JWT действует 15 минут. Refresh tokens пока не используются. Все endpoints persons, relationships и `users/me` требуют авторизацию.
+
 ## Swagger
 
 Swagger-документация генерируется из комментариев над HTTP handlers:

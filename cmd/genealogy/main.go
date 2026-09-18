@@ -10,8 +10,11 @@ import (
 	"genealogy-tree/internal/core/config"
 	corelogger "genealogy-tree/internal/core/logger"
 	"genealogy-tree/internal/core/repository/postgres"
+	"genealogy-tree/internal/core/security"
 	"genealogy-tree/internal/core/transport/http/middleware"
 	httpserver "genealogy-tree/internal/core/transport/http/server"
+	authservice "genealogy-tree/internal/features/auth/service"
+	authhttp "genealogy-tree/internal/features/auth/transport/http"
 	personrepo "genealogy-tree/internal/features/persons/repository"
 	personminio "genealogy-tree/internal/features/persons/repository/minio"
 	personservice "genealogy-tree/internal/features/persons/service"
@@ -19,6 +22,9 @@ import (
 	relrepo "genealogy-tree/internal/features/relationships/repository"
 	relservice "genealogy-tree/internal/features/relationships/service"
 	relhttp "genealogy-tree/internal/features/relationships/transport/http"
+	usersrepo "genealogy-tree/internal/features/users/repository"
+	usersservice "genealogy-tree/internal/features/users/service"
+	usershttp "genealogy-tree/internal/features/users/transport/http"
 
 	"go.uber.org/zap"
 
@@ -30,6 +36,9 @@ import (
 // @description Genealogy Tree REST API
 // @host 		127.0.0.1:8080
 // @BasePath 	/api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
@@ -49,6 +58,17 @@ func main() {
 		logger.Fatal("failed to init postgres connection pool", zap.Error(err))
 	}
 	defer pool.Close()
+
+	tokenManager, err := security.NewTokenManager(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTAccessTTL)
+	if err != nil {
+		logger.Fatal("failed to init token manager", zap.Error(err))
+	}
+
+	usersRepository := usersrepo.NewUsersRepository(pool)
+	usersService := usersservice.NewUsersService(usersRepository)
+	authService := authservice.NewAuthService(usersRepository, tokenManager)
+	authTransportHTTP := authhttp.NewAuthHTTPHandler(authService)
+	usersTransportHTTP := usershttp.NewUsersHTTPHandler(usersService)
 
 	logger.Debug("initializing minio S3-storage")
 
@@ -87,8 +107,19 @@ func main() {
 	)
 
 	apiVersionRouterV1 := httpserver.NewApiVersionRouter(httpserver.ApiVersion1)
-	apiVersionRouterV1.RegisterRoutes(personsTransportHTTP.Routes()...)
-	apiVersionRouterV1.RegisterRoutes(relationshipsTransportHTTP.Routes()...)
+	apiVersionRouterV1.RegisterRoutes(authTransportHTTP.Routes()...)
+	authMiddleware := middleware.Auth(tokenManager)
+	protectedRoutes := [][]httpserver.Route{
+		usersTransportHTTP.Routes(),
+		personsTransportHTTP.Routes(),
+		relationshipsTransportHTTP.Routes(),
+	}
+	for _, routes := range protectedRoutes {
+		for _, route := range routes {
+			route.Middleware = append(route.Middleware, authMiddleware)
+			apiVersionRouterV1.RegisterRoutes(route)
+		}
+	}
 	server.RegisterAPIRouters(apiVersionRouterV1)
 
 	server.RegisterRoutes(httpserver.Route{Method: http.MethodGet, Path: "/health", Handler: func(w http.ResponseWriter, _ *http.Request) {
