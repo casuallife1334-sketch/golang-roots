@@ -119,8 +119,278 @@ const docTemplate = `{
                 }
             }
         },
-        "/persons": {
+        "/trees": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Получение деревьев, доступных текущему пользователю",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trees"
+                ],
+                "summary": "Список деревьев",
+                "responses": {
+                    "200": {
+                        "description": "Список деревьев",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_features_trees_transport_http.TreeResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Создание дерева с автоматическим назначением текущего пользователя владельцем",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trees"
+                ],
+                "summary": "Создание дерева",
+                "parameters": [
+                    {
+                        "description": "CreateTree тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_trees_transport_http.CreateTreeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Успешно созданное дерево",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_trees_transport_http.TreeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/trees/{tree_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Получение доступного пользователю дерева",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trees"
+                ],
+                "summary": "Получение дерева",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Дерево",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_trees_transport_http.TreeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Tree not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Удаление дерева владельцем вместе с его участниками и связанными данными",
+                "tags": [
+                    "trees"
+                ],
+                "summary": "Удаление дерева",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Дерево удалено"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Tree not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Изменение названия дерева владельцем",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trees"
+                ],
+                "summary": "Изменение дерева",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "PatchTree тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_trees_transport_http.PatchTreeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Изменённое дерево",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_trees_transport_http.TreeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Tree not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/trees/{tree_id}/persons": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Получение списка людей в генеалогическом дереве",
                 "produces": [
                     "application/json"
@@ -129,6 +399,15 @@ const docTemplate = `{
                     "persons"
                 ],
                 "summary": "Список людей",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Успешное получение списка людей",
@@ -148,6 +427,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Создание нового человека в генеалогическом дереве",
                 "consumes": [
                     "application/json"
@@ -168,6 +452,13 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/internal_features_persons_transport_http.CreatePersonRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -192,8 +483,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/persons/{id}": {
+        "/trees/{tree_id}/persons/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Получение конкретного человека по ULID",
                 "produces": [
                     "application/json"
@@ -203,6 +499,13 @@ const docTemplate = `{
                 ],
                 "summary": "Получение человека",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "ULID получаемого человека",
@@ -239,12 +542,24 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Удаление человека и связанных с ним relationships",
                 "tags": [
                     "persons"
                 ],
                 "summary": "Удаление человека",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "ULID удаляемого человека",
@@ -278,6 +593,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Изменение информации о существующем человеке",
                 "consumes": [
                     "application/json"
@@ -290,6 +610,13 @@ const docTemplate = `{
                 ],
                 "summary": "Изменение человека",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "ULID изменяемого человека",
@@ -335,8 +662,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/persons/{id}/photo": {
+        "/trees/{tree_id}/persons/{id}/photo": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Получение бинарного содержимого фотографии человека",
                 "produces": [
                     "application/octet-stream"
@@ -346,6 +678,13 @@ const docTemplate = `{
                 ],
                 "summary": "Получение фотографии человека",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "ULID человека",
@@ -382,6 +721,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Загрузка или замена фотографии человека, максимальный размер 10 MB",
                 "consumes": [
                     "multipart/form-data"
@@ -394,6 +738,13 @@ const docTemplate = `{
                 ],
                 "summary": "Загрузка фотографии человека",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "ULID человека",
@@ -437,12 +788,24 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Удаление фотографии человека из хранилища",
                 "tags": [
                     "persons"
                 ],
                 "summary": "Удаление фотографии человека",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "ULID человека",
@@ -476,8 +839,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/relationships": {
+        "/trees/{tree_id}/relationships": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Получение всех связей с опциональной фильтрацией по ULID человека",
                 "produces": [
                     "application/json"
@@ -487,6 +855,13 @@ const docTemplate = `{
                 ],
                 "summary": "Список связей",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Фильтрация связей по ULID человека",
@@ -519,6 +894,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Создание новой связи между двумя людьми",
                 "consumes": [
                     "application/json"
@@ -539,6 +919,13 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/internal_features_relationships_transport_http.CreateRelationshipRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -575,8 +962,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/relationships/{id}": {
+        "/trees/{tree_id}/relationships/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Получение конкретной связи по ULID",
                 "produces": [
                     "application/json"
@@ -586,6 +978,13 @@ const docTemplate = `{
                 ],
                 "summary": "Получение связи",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "ULID получаемой связи",
@@ -622,12 +1021,24 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Удаление существующей связи по ULID",
                 "tags": [
                     "relationships"
                 ],
                 "summary": "Удаление связи",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "ULID удаляемой связи",
@@ -1000,6 +1411,49 @@ const docTemplate = `{
                         }
                     ],
                     "example": "parent_child"
+                }
+            }
+        },
+        "internal_features_trees_transport_http.CreateTreeRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "Family Petrov"
+                }
+            }
+        },
+        "internal_features_trees_transport_http.PatchTreeRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "Family Petrov Updated"
+                }
+            }
+        },
+        "internal_features_trees_transport_http.TreeResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-02-26T10:30:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K7Y8F6M2Z3N4P5R6S7T"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Family Petrov"
+                },
+                "owner_id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K8Z8F6M2Z3N4P5R6S7U"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-02-26T10:30:00Z"
                 }
             }
         },

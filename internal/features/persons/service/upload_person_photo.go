@@ -8,8 +8,11 @@ import (
 	"genealogy-tree/internal/core/domain"
 )
 
-func (s *PersonsService) UploadPersonPhoto(ctx context.Context, id, contentType string, file io.Reader) (domain.Person, error) {
-	person, err := s.personsRepository.GetPerson(ctx, id)
+func (s *PersonsService) UploadPersonPhoto(ctx context.Context, userID, treeID, id, contentType string, file io.Reader) (domain.Person, error) {
+	if err := s.treeAccess.CanWriteTree(ctx, userID, treeID); err != nil {
+		return domain.Person{}, err
+	}
+	person, err := s.personsRepository.GetPerson(ctx, treeID, id)
 	if err != nil {
 		return domain.Person{}, err
 	}
@@ -20,7 +23,7 @@ func (s *PersonsService) UploadPersonPhoto(ctx context.Context, id, contentType 
 		return domain.Person{}, fmt.Errorf("put person photo: %w", err)
 	}
 
-	updatedPerson, err := s.personsRepository.UpdatePersonPhoto(ctx, id, &photoURL)
+	updatedPerson, err := s.personsRepository.UpdatePersonPhoto(ctx, treeID, id, &photoURL)
 	if err != nil {
 		_ = s.fileStorage.Delete(ctx, photoURL)
 		return domain.Person{}, err

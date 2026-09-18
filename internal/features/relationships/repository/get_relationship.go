@@ -7,9 +7,9 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *RelationshipsRepository) GetRelationship(ctx context.Context, id string) (domain.Relationship, error) {
+func (r *RelationshipsRepository) GetRelationship(ctx context.Context, treeID, id string) (domain.Relationship, error) {
 	var rel domain.Relationship
-	err := r.db.QueryRow(ctx, `SELECT id,person1_id,person2_id,type,direction,created_at FROM relationships WHERE id=$1`, id).Scan(&rel.ID, &rel.Person1ID, &rel.Person2ID, &rel.Type, &rel.Direction, &rel.CreatedAt)
+	err := r.db.QueryRow(ctx, `SELECT id,person1_id,person2_id,type,direction,created_at FROM relationships WHERE tree_id=$1 AND id=$2`, treeID, id).Scan(&rel.ID, &rel.Person1ID, &rel.Person2ID, &rel.Type, &rel.Direction, &rel.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return rel, ErrNotFound
 	}

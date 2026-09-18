@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *PersonsRepository) GetPerson(ctx context.Context, id string) (domain.Person, error) {
-	return r.scanPerson(r.db.QueryRow(ctx, `SELECT id,first_name,last_name,birth_date,death_date,gender,photo_url,metadata,created_at,updated_at FROM persons WHERE id=$1`, id))
+func (r *PersonsRepository) GetPerson(ctx context.Context, treeID, id string) (domain.Person, error) {
+	return r.scanPerson(r.db.QueryRow(ctx, `SELECT id,first_name,last_name,birth_date,death_date,gender,photo_url,metadata,created_at,updated_at FROM persons WHERE tree_id=$1 AND id=$2`, treeID, id))
 }
 
 func (r *PersonsRepository) scanPerson(row pgx.Row) (domain.Person, error) {

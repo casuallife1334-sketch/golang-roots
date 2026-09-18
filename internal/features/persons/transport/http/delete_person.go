@@ -12,19 +12,26 @@ import (
 // @Summary Удаление человека
 // @Description Удаление человека и связанных с ним relationships
 // @Tags persons
+// @Security BearerAuth
+// @Param tree_id path string true "ULID дерева"
 // @Param id path string true "ULID удаляемого человека"
 // @Success 204 "Успешное удаление человека"
 // @Failure 400 {object} corehttp.ErrorResponse "Bad Request"
 // @Failure 404 {object} corehttp.ErrorResponse "Person not found"
 // @Failure 500 {object} corehttp.ErrorResponse "internal server error"
-// @Router /persons/{id} [delete]
+// @Router /trees/{tree_id}/persons/{id} [delete]
 func (h *PersonsHTTPHandler) DeletePerson(w http.ResponseWriter, r *http.Request) {
+	userID, treeID, err := getTreeContext(r)
+	if err != nil {
+		corehttp.Error(w, err, "tree access is invalid")
+		return
+	}
 	id, err := request.GetULIDPathValue(r, "id")
 	if err != nil {
 		corehttp.Error(w, err, "person id is invalid")
 		return
 	}
-	err = h.personsService.DeletePerson(r.Context(), id)
+	err = h.personsService.DeletePerson(r.Context(), userID, treeID, id)
 	if errors.Is(err, repository.ErrNotFound) {
 		corehttp.Error(w, err, "the requested person was not found")
 		return

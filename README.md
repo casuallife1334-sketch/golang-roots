@@ -92,7 +92,7 @@ Content-Type: multipart/form-data
 Пример через curl:
 
 ```sh
-curl -X POST http://localhost:8080/api/v1/persons/{id}/photo \
+curl -X POST http://localhost:8080/api/v1/trees/{tree_id}/persons/{id}/photo \
   -F "file=@/path/to/photo.jpg"
 ```
 
@@ -101,7 +101,7 @@ curl -X POST http://localhost:8080/api/v1/persons/{id}/photo \
 ### Получение фотографии
 
 ```http
-GET /api/v1/persons/{id}/photo
+GET /api/v1/trees/{tree_id}/persons/{id}/photo
 ```
 
 Тело запроса не требуется. API возвращает бинарное содержимое фотографии.
@@ -109,7 +109,7 @@ GET /api/v1/persons/{id}/photo
 ### Удаление фотографии
 
 ```http
-DELETE /api/v1/persons/{id}/photo
+DELETE /api/v1/trees/{tree_id}/persons/{id}/photo
 ```
 
 Тело запроса не требуется. Объект удаляется из MinIO, а `photo_url` person очищается.
@@ -124,7 +124,9 @@ API использует префикс `/api/v1`:
 
 ### Persons
 
-`POST /api/v1/persons` - создать человека. Тело обязательно:
+Все endpoints persons требуют `tree_id` и Bearer JWT.
+
+`POST /api/v1/trees/{tree_id}/persons` - создать человека. Тело обязательно:
 
 ```json
 {
@@ -140,11 +142,11 @@ API использует префикс `/api/v1`:
 
 Обязательные поля: `first_name`, `last_name`. Допустимые значения `gender`: `male`, `female`, `other`.
 
-`GET /api/v1/persons` - получить список людей. Тело не требуется.
+`GET /api/v1/trees/{tree_id}/persons` - получить список людей. Тело не требуется.
 
-`GET /api/v1/persons/{id}` - получить человека. Тело не требуется.
+`GET /api/v1/trees/{tree_id}/persons/{id}` - получить человека. Тело не требуется.
 
-`PATCH /api/v1/persons/{id}` - изменить человека. Тело обязательно, все поля необязательны:
+`PATCH /api/v1/trees/{tree_id}/persons/{id}` - изменить человека. Тело обязательно, все поля необязательны:
 
 ```json
 {
@@ -156,11 +158,33 @@ API использует префикс `/api/v1`:
 
 Для очистки nullable-поля передайте `null`, например `{ "photo_url": null }`.
 
-`DELETE /api/v1/persons/{id}` - удалить человека и связанные relationships. Тело не требуется.
+`DELETE /api/v1/trees/{tree_id}/persons/{id}` - удалить человека и связанные relationships. Тело не требуется.
+
+### Trees
+
+`POST /api/v1/trees` - создать дерево. Текущий пользователь автоматически становится владельцем:
+
+```json
+{
+  "name": "Family Petrov"
+}
+```
+
+`GET /api/v1/trees` - получить деревья, доступные текущему пользователю.
+
+`GET /api/v1/trees/{tree_id}` - получить конкретное дерево.
+
+`PATCH /api/v1/trees/{tree_id}` - изменить название дерева. Пока изменять дерево может только владелец.
+
+`DELETE /api/v1/trees/{tree_id}` - удалить дерево вместе со связанными persons и relationships.
+
+Миграция trees добавляет `tree_id` к persons и relationships. Старые записи, созданные до появления trees, остаются без дерева и через новый scoped API не выдаются; для production их нужно отдельно перенести в legacy tree.
 
 ### Relationships
 
-`POST /api/v1/relationships` - создать связь. Тело обязательно:
+Все endpoints relationships требуют `tree_id` и Bearer JWT.
+
+`POST /api/v1/trees/{tree_id}/relationships` - создать связь. Тело обязательно:
 
 Для связи родитель-ребёнок:
 
@@ -183,15 +207,15 @@ API использует префикс `/api/v1`:
 }
 ```
 
-`GET /api/v1/relationships/{id}` - получить связь. Тело не требуется.
+`GET /api/v1/trees/{tree_id}/relationships/{id}` - получить связь. Тело не требуется.
 
-`GET /api/v1/relationships` - получить все связи. Для фильтрации по конкретному человеку передайте его ULID:
+`GET /api/v1/trees/{tree_id}/relationships` - получить все связи. Для фильтрации по конкретному человеку передайте его ULID:
 
 ```http
-GET /api/v1/relationships?person_id=01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
+GET /api/v1/trees/{tree_id}/relationships?person_id=01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
 ```
 
-`DELETE /api/v1/relationships/{id}` - удалить связь. Тело не требуется.
+`DELETE /api/v1/trees/{tree_id}/relationships/{id}` - удалить связь. Тело не требуется.
 
 ## Управление Swagger
 

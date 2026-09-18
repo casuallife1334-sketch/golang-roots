@@ -5,6 +5,9 @@ import (
 	"genealogy-tree/internal/core/domain"
 )
 
-func (s *RelationshipsService) GetRelationship(ctx context.Context, id string) (domain.Relationship, error) {
-	return s.relationshipsRepository.GetRelationship(ctx, id)
+func (s *RelationshipsService) GetRelationship(ctx context.Context, userID, treeID, id string) (domain.Relationship, error) {
+	if err := s.treeAccess.CanReadTree(ctx, userID, treeID); err != nil {
+		return domain.Relationship{}, err
+	}
+	return s.relationshipsRepository.GetRelationship(ctx, treeID, id)
 }

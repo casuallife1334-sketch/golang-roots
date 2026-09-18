@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/oklog/ulid/v2"
 )
 
 var ErrInvalidToken = errors.New("invalid access token")
@@ -45,12 +46,15 @@ func (m *TokenManager) ParseAccessToken(tokenString string) (string, error) {
 			return nil, ErrInvalidToken
 		}
 		return m.secret, nil
-	}, jwt.WithIssuer(m.issuer))
+	}, jwt.WithIssuer(m.issuer), jwt.WithIssuedAt(), jwt.WithExpirationRequired())
 	if err != nil || !token.Valid {
 		return "", ErrInvalidToken
 	}
 	claims, ok := token.Claims.(*jwt.RegisteredClaims)
 	if !ok || claims.Subject == "" {
+		return "", ErrInvalidToken
+	}
+	if _, err := ulid.Parse(claims.Subject); err != nil {
 		return "", ErrInvalidToken
 	}
 	return claims.Subject, nil

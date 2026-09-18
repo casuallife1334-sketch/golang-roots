@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	corelogger "genealogy-tree/internal/core/logger"
 	"genealogy-tree/internal/core/transport/http/response"
 	"github.com/google/uuid"
@@ -73,7 +74,7 @@ func Panic() Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if value := recover(); value != nil {
-					corelogger.FromContext(r.Context()).Error("unexpected panic while handling HTTP request", zap.Any("panic", value))
+					corelogger.FromContext(r.Context()).Error("unexpected panic while handling HTTP request", zap.String("panic_type", fmt.Sprintf("%T", value)))
 					response.NewHTTPResponseHandler(w).PanicResponse(value, "during handle HTTP request got unexpected panic")
 				}
 			}()

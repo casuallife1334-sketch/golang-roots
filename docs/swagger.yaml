@@ -204,6 +204,36 @@ definitions:
         - $ref: '#/definitions/genealogy-tree_internal_core_domain.RelationshipType'
         example: parent_child
     type: object
+  internal_features_trees_transport_http.CreateTreeRequest:
+    properties:
+      name:
+        example: Family Petrov
+        type: string
+    type: object
+  internal_features_trees_transport_http.PatchTreeRequest:
+    properties:
+      name:
+        example: Family Petrov Updated
+        type: string
+    type: object
+  internal_features_trees_transport_http.TreeResponse:
+    properties:
+      created_at:
+        example: "2026-02-26T10:30:00Z"
+        type: string
+      id:
+        example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
+        type: string
+      name:
+        example: Family Petrov
+        type: string
+      owner_id:
+        example: 01JQ2Q4K8Z8F6M2Z3N4P5R6S7U
+        type: string
+      updated_at:
+        example: "2026-02-26T10:30:00Z"
+        type: string
+    type: object
   internal_features_users_transport_http.UserResponse:
     properties:
       created_at:
@@ -294,9 +324,186 @@ paths:
       summary: Регистрация пользователя
       tags:
       - auth
-  /persons:
+  /trees:
+    get:
+      description: Получение деревьев, доступных текущему пользователю
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список деревьев
+          schema:
+            items:
+              $ref: '#/definitions/internal_features_trees_transport_http.TreeResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Список деревьев
+      tags:
+      - trees
+    post:
+      consumes:
+      - application/json
+      description: Создание дерева с автоматическим назначением текущего пользователя
+        владельцем
+      parameters:
+      - description: CreateTree тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_trees_transport_http.CreateTreeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Успешно созданное дерево
+          schema:
+            $ref: '#/definitions/internal_features_trees_transport_http.TreeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создание дерева
+      tags:
+      - trees
+  /trees/{tree_id}:
+    delete:
+      description: Удаление дерева владельцем вместе с его участниками и связанными
+        данными
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Дерево удалено
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Tree not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удаление дерева
+      tags:
+      - trees
+    get:
+      description: Получение доступного пользователю дерева
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Дерево
+          schema:
+            $ref: '#/definitions/internal_features_trees_transport_http.TreeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Tree not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение дерева
+      tags:
+      - trees
+    patch:
+      consumes:
+      - application/json
+      description: Изменение названия дерева владельцем
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: PatchTree тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_trees_transport_http.PatchTreeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Изменённое дерево
+          schema:
+            $ref: '#/definitions/internal_features_trees_transport_http.TreeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Tree not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Изменение дерева
+      tags:
+      - trees
+  /trees/{tree_id}/persons:
     get:
       description: Получение списка людей в генеалогическом дереве
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -310,6 +517,8 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Список людей
       tags:
       - persons
@@ -324,6 +533,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/internal_features_persons_transport_http.CreatePersonRequest'
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -339,13 +553,20 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Создание человека
       tags:
       - persons
-  /persons/{id}:
+  /trees/{tree_id}/persons/{id}:
     delete:
       description: Удаление человека и связанных с ним relationships
       parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       - description: ULID удаляемого человека
         in: path
         name: id
@@ -366,12 +587,19 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Удаление человека
       tags:
       - persons
     get:
       description: Получение конкретного человека по ULID
       parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       - description: ULID получаемого человека
         in: path
         name: id
@@ -396,6 +624,8 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Получение человека
       tags:
       - persons
@@ -404,6 +634,11 @@ paths:
       - application/json
       description: Изменение информации о существующем человеке
       parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       - description: ULID изменяемого человека
         in: path
         name: id
@@ -434,13 +669,20 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Изменение человека
       tags:
       - persons
-  /persons/{id}/photo:
+  /trees/{tree_id}/persons/{id}/photo:
     delete:
       description: Удаление фотографии человека из хранилища
       parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       - description: ULID человека
         in: path
         name: id
@@ -461,12 +703,19 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Удаление фотографии человека
       tags:
       - persons
     get:
       description: Получение бинарного содержимого фотографии человека
       parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       - description: ULID человека
         in: path
         name: id
@@ -491,6 +740,8 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Получение фотографии человека
       tags:
       - persons
@@ -500,6 +751,11 @@ paths:
       description: Загрузка или замена фотографии человека, максимальный размер 10
         MB
       parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       - description: ULID человека
         in: path
         name: id
@@ -529,13 +785,20 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Загрузка фотографии человека
       tags:
       - persons
-  /relationships:
+  /trees/{tree_id}/relationships:
     get:
       description: Получение всех связей с опциональной фильтрацией по ULID человека
       parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       - description: Фильтрация связей по ULID человека
         in: query
         name: person_id
@@ -557,6 +820,8 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Список связей
       tags:
       - relationships
@@ -571,6 +836,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/internal_features_relationships_transport_http.CreateRelationshipRequest'
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -594,13 +864,20 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Создание связи
       tags:
       - relationships
-  /relationships/{id}:
+  /trees/{tree_id}/relationships/{id}:
     delete:
       description: Удаление существующей связи по ULID
       parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       - description: ULID удаляемой связи
         in: path
         name: id
@@ -621,12 +898,19 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Удаление связи
       tags:
       - relationships
     get:
       description: Получение конкретной связи по ULID
       parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
       - description: ULID получаемой связи
         in: path
         name: id
@@ -651,6 +935,8 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Получение связи
       tags:
       - relationships
