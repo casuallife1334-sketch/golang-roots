@@ -22,6 +22,9 @@ import (
 	relrepo "genealogy-tree/internal/features/relationships/repository"
 	relservice "genealogy-tree/internal/features/relationships/service"
 	relhttp "genealogy-tree/internal/features/relationships/transport/http"
+	treerepo "genealogy-tree/internal/features/trees/repository"
+	treeservice "genealogy-tree/internal/features/trees/service"
+	treehttp "genealogy-tree/internal/features/trees/transport/http"
 	usersrepo "genealogy-tree/internal/features/users/repository"
 	usersservice "genealogy-tree/internal/features/users/service"
 	usershttp "genealogy-tree/internal/features/users/transport/http"
@@ -69,7 +72,6 @@ func main() {
 	authService := authservice.NewAuthService(usersRepository, tokenManager)
 	authTransportHTTP := authhttp.NewAuthHTTPHandler(authService)
 	usersTransportHTTP := usershttp.NewUsersHTTPHandler(usersService)
-
 	logger.Debug("initializing minio S3-storage")
 
 	fileStorage, err := personminio.NewMinIOFileStorage(
@@ -83,16 +85,20 @@ func main() {
 		logger.Fatal("failed to init MinIO file storage", zap.Error(err))
 	}
 
+	treesRepository := treerepo.NewTreesRepository(pool)
+	treesService := treeservice.NewTreesService(treesRepository, fileStorage)
+	treesTransportHTTP := treehttp.NewTreesHTTPHandler(treesService)
+
 	logger.Debug("initializing feature", zap.String("feature", "persons"))
 
 	personsRepository := personrepo.NewPersonsRepository(pool)
-	personsService := personservice.NewPersonsService(personsRepository, fileStorage)
+	personsService := personservice.NewPersonsService(personsRepository, fileStorage, treesService)
 	personsTransportHTTP := personhttp.NewPersonsHTTPHandlers(personsService)
 
 	logger.Debug("initializing feature", zap.String("feature", "relationships"))
 
 	relationshipsRepository := relrepo.NewRelationshipsRepository(pool)
-	relationshipsService := relservice.NewRelationshipsService(relationshipsRepository)
+	relationshipsService := relservice.NewRelationshipsService(relationshipsRepository, treesService)
 	relationshipsTransportHTTP := relhttp.NewRelationshipsHTTPHandlers(relationshipsService)
 
 	httpConfig := httpserver.NewConfigMust()
@@ -111,6 +117,7 @@ func main() {
 	authMiddleware := middleware.Auth(tokenManager)
 	protectedRoutes := [][]httpserver.Route{
 		usersTransportHTTP.Routes(),
+		treesTransportHTTP.Routes(),
 		personsTransportHTTP.Routes(),
 		relationshipsTransportHTTP.Routes(),
 	}

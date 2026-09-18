@@ -8,10 +8,10 @@ import (
 )
 
 type RelationshipsService interface {
-	CreateRelationship(context.Context, domain.CreateRelationshipInput) (domain.Relationship, error)
-	GetRelationship(context.Context, string) (domain.Relationship, error)
-	GetRelationships(context.Context, string) ([]domain.Relationship, error)
-	DeleteRelationship(context.Context, string) error
+	CreateRelationship(context.Context, string, string, domain.CreateRelationshipInput) (domain.Relationship, error)
+	GetRelationship(context.Context, string, string, string) (domain.Relationship, error)
+	GetRelationships(context.Context, string, string, string) ([]domain.Relationship, error)
+	DeleteRelationship(context.Context, string, string, string) error
 }
 
 type RelationshipsHTTPHandler struct {
@@ -24,9 +24,9 @@ func NewRelationshipsHTTPHandlers(relationshipsService RelationshipsService) *Re
 
 func (h *RelationshipsHTTPHandler) Routes() []server.Route {
 	return []server.Route{
-		{Method: http.MethodPost, Path: "/relationships", Handler: h.CreateRelationship},
-		{Method: http.MethodGet, Path: "/relationships", Handler: h.GetRelationships},
-		{Method: http.MethodGet, Path: "/relationships/{id}", Handler: h.GetRelationship},
-		{Method: http.MethodDelete, Path: "/relationships/{id}", Handler: h.DeleteRelationship},
+		{Method: http.MethodPost, Path: "/trees/{tree_id}/relationships", Handler: h.CreateRelationship},
+		{Method: http.MethodGet, Path: "/trees/{tree_id}/relationships", Handler: h.GetRelationships},
+		{Method: http.MethodGet, Path: "/trees/{tree_id}/relationships/{id}", Handler: h.GetRelationship},
+		{Method: http.MethodDelete, Path: "/trees/{tree_id}/relationships/{id}", Handler: h.DeleteRelationship},
 	}
 }

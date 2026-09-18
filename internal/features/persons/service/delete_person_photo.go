@@ -5,8 +5,11 @@ import (
 	"fmt"
 )
 
-func (s *PersonsService) DeletePersonPhoto(ctx context.Context, id string) error {
-	person, err := s.personsRepository.GetPerson(ctx, id)
+func (s *PersonsService) DeletePersonPhoto(ctx context.Context, userID, treeID, id string) error {
+	if err := s.treeAccess.CanWriteTree(ctx, userID, treeID); err != nil {
+		return err
+	}
+	person, err := s.personsRepository.GetPerson(ctx, treeID, id)
 	if err != nil {
 		return err
 	}
@@ -16,6 +19,6 @@ func (s *PersonsService) DeletePersonPhoto(ctx context.Context, id string) error
 	if err := s.fileStorage.Delete(ctx, *person.PhotoURL); err != nil {
 		return fmt.Errorf("delete person photo: %w", err)
 	}
-	_, err = s.personsRepository.UpdatePersonPhoto(ctx, id, nil)
+	_, err = s.personsRepository.UpdatePersonPhoto(ctx, treeID, id, nil)
 	return err
 }

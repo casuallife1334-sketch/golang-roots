@@ -6,7 +6,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-func (s *RelationshipsService) CreateRelationship(ctx context.Context, in domain.CreateRelationshipInput) (domain.Relationship, error) {
+func (s *RelationshipsService) CreateRelationship(ctx context.Context, userID, treeID string, in domain.CreateRelationshipInput) (domain.Relationship, error) {
 	if _, err := ulid.Parse(in.Person1ID); err != nil {
 		return domain.Relationship{}, ErrInvalid
 	}
@@ -31,5 +31,8 @@ func (s *RelationshipsService) CreateRelationship(ctx context.Context, in domain
 			in.Person1ID, in.Person2ID = in.Person2ID, in.Person1ID
 		}
 	}
-	return s.relationshipsRepository.CreateRelationship(ctx, in)
+	if err := s.treeAccess.CanWriteTree(ctx, userID, treeID); err != nil {
+		return domain.Relationship{}, err
+	}
+	return s.relationshipsRepository.CreateRelationship(ctx, treeID, in)
 }

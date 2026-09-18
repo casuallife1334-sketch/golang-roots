@@ -19,6 +19,7 @@ import (
 // @Failure 500 {object} corehttp.ErrorResponse "internal server error"
 // @Router /auth/login [post]
 func (h *AuthHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxAuthBodySize)
 	var input LoginRequest
 	if err := request.DecodeJSON(r, &input); err != nil {
 		corehttp.Error(w, err, "request body contains invalid JSON")

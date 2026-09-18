@@ -34,6 +34,8 @@ func (h *HTTPResponseHandler) ErrorResponse(err error, message string) {
 		status, errorText = http.StatusNotFound, coreerrors.ErrNotFound.Error()
 	case errors.Is(err, coreerrors.ErrUnauthorized):
 		status, errorText = http.StatusUnauthorized, coreerrors.ErrUnauthorized.Error()
+	case errors.Is(err, coreerrors.ErrForbidden):
+		status, errorText = http.StatusForbidden, coreerrors.ErrForbidden.Error()
 	}
 	h.JSONResponse(ErrorResponse{Error: errorText, Message: message}, status)
 }

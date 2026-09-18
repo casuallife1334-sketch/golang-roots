@@ -6,8 +6,8 @@ import (
 	"genealogy-tree/internal/core/domain"
 )
 
-func (r *PersonsRepository) GetPersons(ctx context.Context) ([]domain.Person, error) {
-	rows, err := r.db.Query(ctx, `SELECT id,first_name,last_name,birth_date,death_date,gender,photo_url,metadata,created_at,updated_at FROM persons ORDER BY id`)
+func (r *PersonsRepository) GetPersons(ctx context.Context, treeID string) ([]domain.Person, error) {
+	rows, err := r.db.Query(ctx, `SELECT id,first_name,last_name,birth_date,death_date,gender,photo_url,metadata,created_at,updated_at FROM persons WHERE tree_id=$1 ORDER BY id`, treeID)
 	if err != nil {
 		return nil, err
 	}

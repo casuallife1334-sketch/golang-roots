@@ -7,14 +7,17 @@ import (
 	"time"
 )
 
-func (s *PersonsService) CreatePerson(ctx context.Context, input domain.CreatePersonInput) (domain.Person, error) {
+func (s *PersonsService) CreatePerson(ctx context.Context, userID, treeID string, input domain.CreatePersonInput) (domain.Person, error) {
 	if err := validatePerson(input.FirstName, input.LastName, input.BirthDate, input.DeathDate, input.Gender); err != nil {
 		return domain.Person{}, err
 	}
 	if input.Metadata == nil {
 		input.Metadata = map[string]any{}
 	}
-	return s.personsRepository.CreatePerson(ctx, input)
+	if err := s.treeAccess.CanWriteTree(ctx, userID, treeID); err != nil {
+		return domain.Person{}, err
+	}
+	return s.personsRepository.CreatePerson(ctx, treeID, input)
 }
 
 func validatePerson(first, last string, birth, death *time.Time, gender *domain.Gender) error {

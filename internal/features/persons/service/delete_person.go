@@ -2,8 +2,11 @@ package service
 
 import "context"
 
-func (s *PersonsService) DeletePerson(ctx context.Context, id string) error {
-	person, err := s.personsRepository.GetPerson(ctx, id)
+func (s *PersonsService) DeletePerson(ctx context.Context, userID, treeID, id string) error {
+	if err := s.treeAccess.CanWriteTree(ctx, userID, treeID); err != nil {
+		return err
+	}
+	person, err := s.personsRepository.GetPerson(ctx, treeID, id)
 	if err != nil {
 		return err
 	}
@@ -12,5 +15,5 @@ func (s *PersonsService) DeletePerson(ctx context.Context, id string) error {
 			return err
 		}
 	}
-	return s.personsRepository.DeletePerson(ctx, id)
+	return s.personsRepository.DeletePerson(ctx, treeID, id)
 }

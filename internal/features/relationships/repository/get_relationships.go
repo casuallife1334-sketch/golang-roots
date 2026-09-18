@@ -5,11 +5,11 @@ import (
 	"genealogy-tree/internal/core/domain"
 )
 
-func (r *RelationshipsRepository) GetRelationships(ctx context.Context, personID string) ([]domain.Relationship, error) {
-	query := `SELECT id,person1_id,person2_id,type,direction,created_at FROM relationships`
-	args := []any{}
+func (r *RelationshipsRepository) GetRelationships(ctx context.Context, treeID, personID string) ([]domain.Relationship, error) {
+	query := `SELECT id,person1_id,person2_id,type,direction,created_at FROM relationships WHERE tree_id=$1`
+	args := []any{treeID}
 	if personID != "" {
-		query += ` WHERE person1_id=$1 OR person2_id=$1`
+		query += ` AND (person1_id=$2 OR person2_id=$2)`
 		args = append(args, personID)
 	}
 	query += ` ORDER BY id`
