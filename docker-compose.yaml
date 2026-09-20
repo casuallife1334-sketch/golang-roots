@@ -1,4 +1,16 @@
 services:
+  frontend:
+    build:
+      context: ${PROJECT_ROOT}/public
+      dockerfile: Dockerfile
+    container_name: genealogy-frontend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      genealogy:
+        condition: service_started
+    restart: unless-stopped
+
   genealogy:
     build:
       context: ${PROJECT_ROOT}

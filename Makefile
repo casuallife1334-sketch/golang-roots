@@ -9,7 +9,7 @@ env-up:
 	@docker compose up -d --wait postgres minio
 
 docker-up:
-	@docker compose up -d --build genealogy
+	@docker compose up -d --build genealogy frontend
 
 docker-down:
 	@docker compose down

@@ -22,7 +22,7 @@ cp .env.example .env
 make docker-deploy
 ```
 
-API будет доступен по адресу `http://localhost:8080`. Остановить контейнеры можно командой:
+Frontend будет доступен по адресу `http://localhost:5173`, API - по адресу `http://localhost:8080`. Frontend работает через Nginx и проксирует `/api` к контейнеру API. Остановить контейнеры можно командой:
 
 ```sh
 make docker-down
