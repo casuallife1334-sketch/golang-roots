@@ -1,5 +1,7 @@
 import { AlertCircle, Check, ChevronDown, LoaderCircle, X } from "lucide-react";
 import type { ReactNode } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import "./dialog.css";
 
 export function Button({
   children,
@@ -13,7 +15,8 @@ export function Button({
   return (
     <button
       {...props}
-      className={`button ${variant}`}
+      type={props.type ?? "button"}
+      className={`button ${variant} ${props.className ?? ""}`}
       disabled={loading || props.disabled}
     >
       {loading && <LoaderCircle className="spin" size={16} />}
@@ -49,7 +52,10 @@ export function Notice({
   type?: "error" | "success";
 }) {
   return (
-    <div className={`notice ${type}`}>
+    <div
+      className={`notice ${type}`}
+      role={type === "error" ? "alert" : "status"}
+    >
       <AlertCircle size={16} />
       {children}
     </div>
@@ -80,39 +86,43 @@ export function Modal({
   children,
   onClose,
   wide = false,
+  busy = false,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  busy?: boolean;
 }) {
   return (
-    <div
-      className="modal-backdrop"
-      role="presentation"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
+    <Dialog.Root
+      open
+      onOpenChange={(open) => {
+        if (!open && !busy) onClose();
       }}
     >
-      <div
-        className={`modal ${wide ? "wide" : ""}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-      >
-        <div className="modal-head">
-          <h2>{title}</h2>
-          <button
-            className="icon-button"
-            onClick={onClose}
-            aria-label="Закрыть"
+      <Dialog.Portal>
+        <Dialog.Overlay className="modal-backdrop">
+          <Dialog.Content
+            className={`modal ${wide ? "wide" : ""}`}
+            aria-describedby={undefined}
           >
-            <X size={18} />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
+            <div className="modal-head">
+              <Dialog.Title>{title}</Dialog.Title>
+              <button
+                className="icon-button"
+                onClick={onClose}
+                disabled={busy}
+                aria-label="Закрыть"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            {children}
+          </Dialog.Content>
+        </Dialog.Overlay>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
 export function Select({

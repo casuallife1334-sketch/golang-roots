@@ -1,14 +1,14 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { GitBranch, LogOut, Settings, UsersRound, Leaf } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../api";
+import { treeQuery } from "../data/queries";
 import { useAuth } from "../auth";
 
 export function Shell() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const trees = useQuery({ queryKey: ["trees", user?.id], queryFn: api.trees });
+  const trees = useQuery(treeQuery(user?.id));
   const routeTreeId = location.pathname.match(/^\/trees\/([^/]+)/)?.[1];
   const storedTreeId = user
     ? sessionStorage.getItem(`roots:last-tree:${user.id}`)

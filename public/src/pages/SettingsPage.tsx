@@ -13,6 +13,8 @@ import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
 import { Button, Field, Modal, Notice, SavedBadge } from "../shared/ui";
 import { formatDate } from "../utils";
+import { keys, treeQuery } from "../data/queries";
+import { readPreferences } from "../data/preferences";
 
 interface Preferences {
   compact: boolean;
@@ -30,7 +32,7 @@ export function SettingsPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const query = useQueryClient();
-  const trees = useQuery({ queryKey: ["trees", user?.id], queryFn: api.trees });
+  const trees = useQuery(treeQuery(user?.id));
   const [prefs, setPrefs] = useState(defaults);
   const [draft, setDraft] = useState(defaults);
   const [treeName, setTreeName] = useState("");
@@ -38,17 +40,26 @@ export function SettingsPage() {
   const [message, setMessage] = useState("");
   const key = `roots:preferences:v1:${user?.id}`;
   useEffect(() => {
-    const stored = localStorage.getItem(key);
-    const next = stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
+    const next = readPreferences(key);
     setPrefs(next);
     setDraft(next);
   }, [key]);
-  const current = trees.data?.[0];
+  const [currentId, setCurrentId] = useState(() =>
+    sessionStorage.getItem(`roots:last-tree:${user?.id}`),
+  );
+  const current =
+    trees.data?.find((tree) => tree.id === currentId) ?? trees.data?.[0];
   useEffect(() => {
-    if (current && !treeName) setTreeName(current.name);
+    if (current) setTreeName(current.name);
   }, [current?.id]);
   const save = () => {
-    localStorage.setItem(key, JSON.stringify(draft));
+    try {
+      localStorage.setItem(key, JSON.stringify(draft));
+    } catch {
+      setMessage("Не удалось сохранить настройки браузера");
+      return;
+    }
+    window.dispatchEvent(new Event("roots:preferences"));
     setPrefs(draft);
     setMessage("Настройки отображения сохранены");
     setTimeout(() => setMessage(""), 2400);
@@ -56,7 +67,7 @@ export function SettingsPage() {
   const rename = useMutation({
     mutationFn: () => api.patchTree(current!.id, treeName.trim()),
     onSuccess: () => {
-      query.invalidateQueries({ queryKey: ["trees"] });
+      query.invalidateQueries({ queryKey: keys.trees(user?.id) });
       setMessage("Название дерева сохранено");
     },
   });
@@ -64,7 +75,12 @@ export function SettingsPage() {
     mutationFn: () => api.deleteTree(current!.id),
     onSuccess: () => {
       setModal(false);
-      query.invalidateQueries({ queryKey: ["trees"] });
+      query.removeQueries({ queryKey: keys.people(user?.id, current!.id) });
+      query.removeQueries({
+        queryKey: keys.relationships(user?.id, current!.id),
+      });
+      query.removeQueries({ queryKey: ["photo", user?.id, current!.id] });
+      query.invalidateQueries({ queryKey: keys.trees(user?.id) });
       navigate("/trees");
     },
   });
@@ -84,7 +100,7 @@ export function SettingsPage() {
           <h1>Настройки</h1>
           <p>Рабочая область и данные аккаунта</p>
         </div>
-        {message && <SavedBadge />}
+        {message && <p role="status">{message}</p>}
       </section>
       <div className="settings-grid">
         <section className="settings-card">
@@ -136,6 +152,20 @@ export function SettingsPage() {
           />
         </section>
         <section className="settings-card tree-settings">
+          {trees.error && <Notice>{trees.error.message}</Notice>}
+          {rename.error && <Notice>{rename.error.message}</Notice>}
+          <Field label="Выбрать дерево">
+            <select
+              value={current?.id ?? ""}
+              onChange={(event) => setCurrentId(event.target.value)}
+            >
+              {trees.data?.map((tree) => (
+                <option key={tree.id} value={tree.id}>
+                  {tree.name}
+                </option>
+              ))}
+            </select>
+          </Field>
           <div className="card-title">
             <GitBranch size={20} />
             <div>
@@ -153,7 +183,11 @@ export function SettingsPage() {
                   />
                   <Button
                     variant="secondary"
-                    disabled={!treeName.trim() || treeName === current.name}
+                    disabled={
+                      current.owner_id !== user?.id ||
+                      !treeName.trim() ||
+                      treeName === current.name
+                    }
                     loading={rename.isPending}
                     onClick={() => rename.mutate()}
                   >
@@ -165,7 +199,11 @@ export function SettingsPage() {
                 <span>Деревьев доступно</span>
                 <strong>{trees.data?.length || 0}</strong>
               </div>
-              <button className="danger-row" onClick={() => setModal(true)}>
+              <button
+                className="danger-row"
+                disabled={current.owner_id !== user?.id}
+                onClick={() => setModal(true)}
+              >
                 <Trash2 size={16} />
                 Удалить дерево
               </button>
@@ -191,8 +229,13 @@ export function SettingsPage() {
         </section>
       </div>
       {modal && (
-        <Modal title="Удалить дерево?" onClose={() => setModal(false)}>
+        <Modal
+          title="Удалить дерево?"
+          onClose={() => setModal(false)}
+          busy={remove.isPending}
+        >
           <div className="confirm-content">
+            {remove.error && <Notice>{remove.error.message}</Notice>}
             <Notice>
               Будут удалены дерево, люди и связи внутри него. Это действие
               нельзя отменить.

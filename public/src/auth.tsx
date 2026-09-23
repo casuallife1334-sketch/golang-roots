@@ -1,65 +1,103 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, setUnauthorizedHandler } from "./api";
+import { useQueryClient } from "@tanstack/react-query";
+import { api, ApiError, setUnauthorizedHandler } from "./api";
+import { cancelSessionRequests, TOKEN_KEY } from "./data/http";
 import type { User } from "./types";
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
+  error: string;
+  retry: () => void;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 const AuthContext = createContext<AuthContextValue | null>(null);
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  const epoch = useRef(0);
   const navigate = useNavigate();
-  const clear = () => {
-    sessionStorage.removeItem("roots:access-token");
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+  const query = useQueryClient();
+  const clear = useCallback(() => {
+    epoch.current++;
+    cancelSessionRequests();
+    query.clear();
+    sessionStorage.removeItem(TOKEN_KEY);
     setUser(null);
-    sessionStorage.setItem(
-      "roots:session-message",
-      "Сессия истекла. Войдите снова",
-    );
-    navigate("/login", { replace: true });
-  };
+    setError("");
+    setLoading(false);
+    navigateRef.current("/login", { replace: true });
+  }, [query]);
+  useEffect(() => setUnauthorizedHandler(clear), [clear]);
   useEffect(() => {
-    setUnauthorizedHandler(clear);
-    const existing = sessionStorage.getItem("roots:access-token");
-    if (!existing) {
+    const controller = new AbortController();
+    const version = ++epoch.current;
+    if (!sessionStorage.getItem(TOKEN_KEY)) {
       setLoading(false);
       return;
     }
+    setLoading(true);
+    setError("");
     api
-      .me()
-      .then(setUser)
-      .catch(clear)
-      .finally(() => setLoading(false));
-  }, []);
+      .me(controller.signal)
+      .then((value) => {
+        if (version === epoch.current) setUser(value);
+      })
+      .catch((reason) => {
+        if (controller.signal.aborted || version !== epoch.current) return;
+        if (reason instanceof ApiError && reason.status === 401) clear();
+        else
+          setError(
+            "Не удалось проверить сессию. Проверьте соединение и повторите попытку.",
+          );
+      })
+      .finally(() => {
+        if (version === epoch.current) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [attempt, clear]);
   const login = async (email: string, password: string) => {
+    const version = ++epoch.current;
+    cancelSessionRequests();
+    query.clear();
     const result = await api.login({ email, password });
-    sessionStorage.setItem("roots:access-token", result.access_token);
-    setUser(await api.me());
-  };
-  const register = async (email: string, password: string) => {
-    await api.register({ email, password });
-    await login(email, password);
-  };
-  const logout = () => {
-    sessionStorage.removeItem("roots:access-token");
-    setUser(null);
-    navigate("/login", { replace: true });
+    if (version !== epoch.current) throw new Error("Вход отменён");
+    sessionStorage.setItem(TOKEN_KEY, result.access_token);
+    const value = await api.me();
+    if (version !== epoch.current) throw new Error("Вход отменён");
+    setUser(value);
+    setError("");
   };
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        error,
+        retry: () => setAttempt((value) => value + 1),
+        login,
+        register: async (email, password) => {
+          await api.register({ email, password });
+          await login(email, password);
+        },
+        logout: clear,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

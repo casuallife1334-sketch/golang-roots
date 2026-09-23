@@ -1,50 +1,80 @@
 import { Background, Controls, MiniMap, ReactFlow } from "@xyflow/react";
-import { useMemo } from "react";
-import { buildGraph } from "../graph";
+import "@xyflow/react/dist/style.css";
+import { useMemo, useState } from "react";
+import { Viewport } from "./Viewport";
+import { buildGraph, type PersonGraphNode } from "../graph";
 import type { Person, Relationship } from "../types";
-import { JunctionNode } from "./JunctionNode";
 import { PersonNode } from "./PersonNode";
-
-const nodeTypes = { person: PersonNode, junction: JunctionNode };
-type Props = {
-  people: Person[];
-  relationships: Relationship[];
-  photoUrls: Record<string, string>;
-  selectedId?: string;
-  onSelect: (person: Person) => void;
-};
-
+import { FamilyEdge } from "./FamilyEdge";
+import { usePreferences } from "../data/preferences";
+import { Notice } from "../shared/ui";
+import "./graph.css";
+const nodeTypes = { person: PersonNode },
+  edgeTypes = { family: FamilyEdge };
 export function FamilyGraph({
+  treeId,
   people,
   relationships,
-  photoUrls,
   selectedId,
   onSelect,
-}: Props) {
+}: {
+  treeId: string;
+  people: Person[];
+  relationships: Relationship[];
+  selectedId?: string;
+  onSelect: (person: Person) => void;
+}) {
+  const prefs = usePreferences();
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const graph = useMemo(
-    () => buildGraph(people, relationships, photoUrls, selectedId),
-    [people, relationships, photoUrls, selectedId],
+    () => buildGraph(people, relationships, prefs.compact),
+    [people, relationships, prefs.compact],
+  );
+  const nodes: PersonGraphNode[] = useMemo(
+    () =>
+      graph.nodes.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          treeId,
+          selected: node.id === selectedId,
+          portraits: prefs.portraits,
+        },
+      })),
+    [graph.nodes, treeId, selectedId, prefs.portraits],
   );
   return (
-    <ReactFlow
-      nodes={graph.nodes}
-      edges={graph.edges}
-      nodeTypes={nodeTypes}
-      fitView
-      fitViewOptions={{ padding: 0.25 }}
-      nodesConnectable={false}
-      nodesDraggable={false}
-      onNodeClick={(_, node) => {
-        const person = people.find((item) => item.id === node.id);
-        if (person) onSelect(person);
-      }}
-      proOptions={{ hideAttribution: true }}
-    >
-      <Background color="#d5d2cf" gap={24} size={1} />
-      <Controls showInteractive={false} />
-      <MiniMap
-        nodeColor={(node) => (node.data.selected ? "#3478ff" : "#9aa0a6")}
-      />
-    </ReactFlow>
+    <div ref={setContainer} style={{ height: "100%", width: "100%" }}>
+      {graph.warnings.length > 0 && (
+        <div className="graph-warning">
+          <Notice>{[...new Set(graph.warnings)].join(". ")}</Notice>
+        </div>
+      )}
+      <ReactFlow
+        nodes={nodes}
+        edges={graph.edges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        fitView
+        fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
+        minZoom={0.1}
+        maxZoom={2}
+        nodesConnectable={false}
+        nodesDraggable={false}
+        onlyRenderVisibleElements
+        onNodeClick={(_, node) => onSelect(node.data.person)}
+      >
+        <Viewport
+          container={container}
+          topology={JSON.stringify([
+            graph.nodes.map((node) => [node.id, node.position]),
+            graph.edges.map((edge) => edge.id),
+          ])}
+        />
+        <Background color="#d5d2cf" gap={24} size={1} />
+        <Controls showInteractive={false} />
+        {prefs.minimap && <MiniMap nodeColor="#a1adb5" />}
+      </ReactFlow>
+    </div>
   );
 }

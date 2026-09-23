@@ -1,0 +1,46 @@
+import { z } from "zod";
+
+export const userSchema = z.object({
+  id: z.string().min(1),
+  email: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+export const treeSchema = z.object({
+  id: z.string().min(1),
+  owner_id: z.string(),
+  name: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+export const personSchema = z.object({
+  id: z.string().min(1),
+  first_name: z.string(),
+  last_name: z.string(),
+  birth_date: z.string().nullish(),
+  death_date: z.string().nullish(),
+  gender: z.enum(["male", "female", "other"]).nullish(),
+  photo_url: z.string().nullish(),
+  metadata: z.record(z.string().nullable()).nullable().default(null),
+  created_at: z.string(),
+  updated_at: z.string().nullish(),
+});
+export const relationshipSchema = z.object({
+  id: z.string().min(1),
+  person1_id: z.string(),
+  person2_id: z.string(),
+  type: z.enum(["parent_child", "spouse"]),
+  direction: z.enum(["parent", "child"]).nullish(),
+  created_at: z.string(),
+});
+// Go list endpoints may encode an empty slice as null.
+export const listOf = <T extends z.ZodTypeAny>(schema: T) =>
+  z
+    .array(schema)
+    .nullable()
+    .transform((value) => value ?? []);
+export const loginSchema = z.object({
+  access_token: z.string().min(1),
+  token_type: z.string(),
+  expires_in: z.number(),
+});

@@ -1,88 +1,16 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Grid2X2, List, Search, UsersRound, X } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { api } from "../api";
-import { useAuth } from "../auth";
-import { Button, EmptyState, Select } from "../shared/ui";
+import { useTreeData } from "../data/queries";
+import { Button, EmptyState, Select, Notice } from "../shared/ui";
 import { PersonPortrait } from "../shared/PersonPortrait";
-import type { Person, Relationship } from "../types";
-import { formatYears, fullName, initials } from "../utils";
+import { fullName } from "../utils";
+import { deriveFamilies } from "../features/tree/families";
 
-interface Family {
-  id: string;
-  members: Person[];
-  children: Person[];
-  name: string;
-}
-function deriveFamilies(
-  people: Person[],
-  relationships: Relationship[],
-): Family[] {
-  const map = new Map(people.map((p) => [p.id, p]));
-  const groups = new Map<string, Family>();
-  for (const r of relationships.filter((r) => r.type === "spouse")) {
-    const ids = [r.person1_id, r.person2_id].sort();
-    const members = ids.map((id) => map.get(id)).filter(Boolean) as Person[];
-    if (members.length === 2)
-      groups.set(ids.join(":"), {
-        id: ids.join(":"),
-        members,
-        children: [],
-        name: familyName(members),
-      });
-  }
-  const parentSets = new Map<string, string[]>();
-  relationships
-    .filter((r) => r.type === "parent_child")
-    .forEach((r) => {
-      const parent = r.direction === "child" ? r.person2_id : r.person1_id;
-      const child = r.direction === "child" ? r.person1_id : r.person2_id;
-      parentSets.set(child, [...(parentSets.get(child) || []), parent]);
-    });
-  parentSets.forEach((parentIds, childId) => {
-    const ids = [...new Set(parentIds)].sort();
-    const members = ids.map((id) => map.get(id)).filter(Boolean) as Person[];
-    if (!members.length) return;
-    const key = ids.join(":");
-    const current = groups.get(key) || {
-      id: key,
-      members,
-      children: [],
-      name:
-        members.length > 1 ? familyName(members) : "Один известный родитель",
-    };
-    current.children.push(map.get(childId)!);
-    groups.set(key, current);
-  });
-  return [...groups.values()]
-    .filter((f) => f.members.length)
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
-function familyName(members: Person[]) {
-  const surnames = [
-    ...new Set(members.map((p) => p.last_name).filter(Boolean)),
-  ];
-  return surnames.length === 1
-    ? `Семья ${surnames[0]}`
-    : members.map((p) => p.first_name).join(" и ");
-}
 export function FamiliesPage() {
   const { treeId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const trees = useQuery({ queryKey: ["trees", user?.id], queryFn: api.trees });
-  const tree = trees.data?.find((t) => t.id === treeId);
-  const people = useQuery({
-    queryKey: ["people", user?.id, treeId],
-    queryFn: () => api.persons(treeId!),
-    enabled: Boolean(treeId),
-  });
-  const relationships = useQuery({
-    queryKey: ["relationships", user?.id, treeId],
-    queryFn: () => api.relationships(treeId!),
-    enabled: Boolean(treeId),
-  });
+  const { trees, tree, people, relationships } = useTreeData(treeId);
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState<"grid" | "list">("grid");
   const [filter, setFilter] = useState("all");
@@ -108,7 +36,38 @@ export function FamiliesPage() {
         ),
     [people.data, relationships.data, search, filter, sort],
   );
-  if (!tree) return <div className="center-panel">Загрузка семей…</div>;
+  if (
+    trees.isPending ||
+    (tree && (people.isPending || relationships.isPending))
+  )
+    return <div className="center-panel">Загрузка семей…</div>;
+  if (trees.error || people.error || relationships.error)
+    return (
+      <div className="center-panel">
+        <Notice>
+          {trees.error?.message ||
+            people.error?.message ||
+            relationships.error?.message}
+        </Notice>
+        <Button
+          onClick={() => {
+            void trees.refetch();
+            void people.refetch();
+            void relationships.refetch();
+          }}
+        >
+          Повторить
+        </Button>
+      </div>
+    );
+  if (!tree)
+    return (
+      <EmptyState
+        title="Дерево не найдено"
+        text="Оно удалено или недоступно"
+        action={<Button onClick={() => navigate("/trees")}>К деревьям</Button>}
+      />
+    );
   return (
     <div className="content-page">
       <header className="topbar">
