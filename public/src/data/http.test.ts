@@ -69,3 +69,31 @@ it("aborts requests when the session changes", async () => {
   cancelSessionRequests();
   await expect(promise).rejects.toMatchObject({ name: "AbortError" });
 });
+it("accepts an image returned as application/octet-stream", async () => {
+  const png = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0,
+  ]);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      new Response(png, {
+        headers: { "Content-Type": "application/octet-stream" },
+      }),
+    ),
+  );
+  const result = await request<Blob>("/photo", "blob");
+  expect(result.type).toBe("image/png");
+});
+it("rejects a binary response that is not an image", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      new Response("not an image", {
+        headers: { "Content-Type": "application/octet-stream" },
+      }),
+    ),
+  );
+  await expect(request("/photo", "blob")).rejects.toMatchObject({
+    code: "invalid_response",
+  });
+});

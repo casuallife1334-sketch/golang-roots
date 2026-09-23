@@ -22,6 +22,30 @@ export function cancelSessionRequests() {
   sessionRequests.abort();
   sessionRequests = new AbortController();
 }
+async function validatedImageBlob(response: Response) {
+  const buffer = await response.arrayBuffer();
+  const bytes = new Uint8Array(buffer, 0, Math.min(12, buffer.byteLength));
+  const type =
+    bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
+      ? "image/jpeg"
+      : bytes.length >= 8 &&
+          [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every(
+            (value, index) => bytes[index] === value,
+          )
+        ? "image/png"
+        : bytes.length >= 12 &&
+            String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" &&
+            String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
+          ? "image/webp"
+          : null;
+  if (!type)
+    throw new ApiError(
+      502,
+      "Сервер вернул некорректную фотографию",
+      "invalid_response",
+    );
+  return new Blob([buffer], { type });
+}
 export async function request<T>(
   path: string,
   schema: z.ZodType<T, z.ZodTypeDef, unknown> | "blob" | "void",
@@ -84,14 +108,7 @@ export async function request<T>(
     }
     if (schema === "void") return undefined as T;
     if (schema === "blob") {
-      const blob = await response.blob();
-      if (!blob.type.startsWith("image/"))
-        throw new ApiError(
-          502,
-          "Сервер вернул некорректную фотографию",
-          "invalid_response",
-        );
-      return blob as T;
+      return (await validatedImageBlob(response)) as T;
     }
     const parsed = schema.safeParse(
       await response.json().catch(() => undefined),

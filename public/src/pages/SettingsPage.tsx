@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { useAuth } from "../auth";
-import { Button, Field, Modal, Notice, SavedBadge } from "../shared/ui";
+import { Button, Field, Modal, Notice, SavedBadge, Select } from "../shared/ui";
 import { formatDate } from "../utils";
 import { keys, treeQuery } from "../data/queries";
 import { readPreferences } from "../data/preferences";
@@ -152,10 +152,17 @@ export function SettingsPage() {
           />
         </section>
         <section className="settings-card tree-settings">
+          <div className="card-title">
+            <GitBranch size={20} />
+            <div>
+              <h2>Текущее дерево</h2>
+              <p>Управление доступными деревьями</p>
+            </div>
+          </div>
           {trees.error && <Notice>{trees.error.message}</Notice>}
           {rename.error && <Notice>{rename.error.message}</Notice>}
           <Field label="Выбрать дерево">
-            <select
+            <Select
               value={current?.id ?? ""}
               onChange={(event) => setCurrentId(event.target.value)}
             >
@@ -164,15 +171,8 @@ export function SettingsPage() {
                   {tree.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
-          <div className="card-title">
-            <GitBranch size={20} />
-            <div>
-              <h2>Текущее дерево</h2>
-              <p>Управление доступными деревьями</p>
-            </div>
-          </div>
           {current ? (
             <>
               <Field label="Название дерева">

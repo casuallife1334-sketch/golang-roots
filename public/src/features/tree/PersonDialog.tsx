@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button, Field, Modal, Notice, Select } from "../../shared/ui";
 import { useTreeCache } from "../../data/queries";
-import { dateInput, validImage } from "../../utils";
+import { dateInput, useObjectUrl, validImage } from "../../utils";
 import type { Person, Tree } from "../../types";
 import { personInput, PersonSave, type PersonForm } from "./personSave";
 import { PhotoCropDialog } from "./PhotoCropDialog";
@@ -33,6 +33,7 @@ export function PersonDialog({
   const [file, setFile] = useState<File>();
   const [cropFile, setCropFile] = useState<File>();
   const [removePhoto, setRemovePhoto] = useState(false);
+  const preview = useObjectUrl(file);
   const [error, setError] = useState("");
   const mutation = useMutation({
     mutationFn: () =>
@@ -138,7 +139,15 @@ export function PersonDialog({
                 }}
               />
             </Field>
-            {file && <p>{file.name}</p>}
+            {file && preview && (
+              <div className="photo-selection">
+                <img src={preview} alt="Предпросмотр выбранной фотографии" />
+                <span>
+                  <strong>Фотография подготовлена</strong>
+                  <small>{file.name}</small>
+                </span>
+              </div>
+            )}
             {(file || person?.photo_url) && (
               <Button
                 variant="ghost"

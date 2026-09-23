@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { GitBranch, Plus } from "lucide-react";
 import { Select } from "../../shared/ui";
 import type { Tree } from "../../types";
 export function TreeSwitcher({
@@ -14,6 +14,7 @@ export function TreeSwitcher({
 }) {
   return (
     <div className="tree-switcher">
+      <GitBranch className="tree-switcher-icon" size={16} />
       <Select
         aria-label="Выбрать дерево"
         value={current?.id ?? ""}
@@ -26,8 +27,12 @@ export function TreeSwitcher({
           </option>
         ))}
       </Select>
-      <button onClick={onCreate} aria-label="Создать дерево">
-        <Plus size={15} />
+      <button
+        className="tree-add-button"
+        onClick={onCreate}
+        aria-label="Создать дерево"
+      >
+        <Plus size={16} />
       </button>
     </div>
   );

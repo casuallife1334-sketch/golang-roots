@@ -59,6 +59,7 @@ export function FamilyGraph({
         fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
         minZoom={0.1}
         maxZoom={2}
+        proOptions={{ hideAttribution: true }}
         nodesConnectable={false}
         nodesDraggable={false}
         onlyRenderVisibleElements

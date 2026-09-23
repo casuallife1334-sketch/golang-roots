@@ -49,12 +49,16 @@ const relationships = [
   relation("xz", "childA", "grandchild"),
   relation("yz", "childB", "grandchild"),
 ];
-async function fixture(page: Page, meStatus = 200) {
+async function fixture(
+  page: Page,
+  meStatus = 200,
+  photoFailuresBeforeSuccess = 1,
+) {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   let people = structuredClone(initial);
   let creates = 0;
-  let photoFailures = 1;
+  let photoFailures = photoFailuresBeforeSuccess;
   await page.addInitScript(() =>
     sessionStorage.setItem("roots:access-token", "test-token"),
   );
@@ -81,7 +85,7 @@ async function fixture(page: Page, meStatus = 200) {
       }
       return route.fulfill({
         status: 200,
-        contentType: "image/png",
+        contentType: "application/octet-stream",
         body: Buffer.from(
           "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jP1sAAAAASUVORK5CYII=",
           "base64",
@@ -175,14 +179,13 @@ test("failed photo upload retries without creating a duplicate", async ({
     canvas.getContext("2d")!.fillRect(0, 0, 20, 30);
     return canvas.toDataURL().split(",")[1];
   });
-  await page
-    .getByLabel("Фотография", { exact: true })
-    .setInputFiles({
-      name: "photo.png",
-      mimeType: "image/png",
-      buffer: Buffer.from(png, "base64"),
-    });
+  await page.getByLabel("Фотография", { exact: true }).setInputFiles({
+    name: "photo.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(png, "base64"),
+  });
   await page.getByRole("button", { name: "Применить фото" }).click();
+  await expect(page.locator(".photo-selection img")).toBeVisible();
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Добавить человека", exact: true })
@@ -192,6 +195,59 @@ test("failed photo upload retries without creating a duplicate", async ({
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(state.creates).toBe(1);
   expect(state.errors).toEqual([]);
+});
+test("uploaded photo appears immediately when the API returns binary content", async ({
+  page,
+}) => {
+  const state = await fixture(page, 200, 0);
+  await page.goto("/trees/tree?person=childA");
+  const png = await page.evaluate(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 80;
+    canvas.height = 120;
+    const context = canvas.getContext("2d")!;
+    context.fillStyle = "#3478ff";
+    context.fillRect(0, 0, 80, 120);
+    return canvas.toDataURL().split(",")[1];
+  });
+  await page.locator('.profile-photo input[type="file"]').setInputFiles({
+    name: "portrait.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(png, "base64"),
+  });
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByLabel("Область обрезки фотографии")).toBeVisible();
+  await expect(page.getByLabel("Масштаб фотографии")).toHaveValue("1");
+  await expect(page.getByText("Затемнённые края")).toBeVisible();
+  await page.getByLabel("Увеличить масштаб").click();
+  await expect(page.getByLabel("Масштаб фотографии")).not.toHaveValue("1");
+  await page.screenshot({
+    path: "test-results/crop-reviewed.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Применить фото" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(".profile-photo img")).toBeVisible();
+  expect(state.errors).toEqual([]);
+});
+test("tree selectors keep their controls separated", async ({ page }) => {
+  await fixture(page);
+  await page.goto("/trees/tree");
+  const switcher = page.locator(".tree-switcher");
+  await expect(switcher).toBeVisible();
+  await expect(switcher.getByLabel("Создать дерево")).toBeVisible();
+  await page.goto("/settings");
+  const title = page.locator(".tree-settings .card-title");
+  const selector = page.locator(".tree-settings > .field").first();
+  await expect(title).toBeVisible();
+  await expect(selector).toBeVisible();
+  const titleBox = await title.boundingBox();
+  const selectorBox = await selector.boundingBox();
+  expect(selectorBox!.y).toBeGreaterThan(titleBox!.y + titleBox!.height);
+  await page.screenshot({
+    path: "test-results/settings-reviewed.png",
+    fullPage: true,
+  });
 });
 test("network/server failure during session check preserves token", async ({
   page,
