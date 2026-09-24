@@ -16,6 +16,9 @@
   box-shadow: 0 20px 60px #111b2d33;
   padding: 21px;
 }
+.modal.wide {
+  width: min(940px, 100%);
+}
 .modal-head {
   display: flex;
   justify-content: space-between;

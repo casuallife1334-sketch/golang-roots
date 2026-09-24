@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"genealogy-tree/internal/core/transport/http/request"
 	corehttp "genealogy-tree/internal/core/transport/http/response"
 	"genealogy-tree/internal/features/trees/repository"
 	"net/http"
@@ -20,12 +21,12 @@ import (
 // @Failure 404 {object} corehttp.ErrorResponse "Tree not found"
 // @Router /trees/{tree_id} [get]
 func (h *TreesHTTPHandler) GetTree(w http.ResponseWriter, r *http.Request) {
-	userID, err := getUserID(r)
+	userID, err := request.GetUserID(r)
 	if err != nil {
 		corehttp.Error(w, err, "authentication is required")
 		return
 	}
-	treeID, err := getTreeID(r)
+	treeID, err := request.GetTreeID(r)
 	if err != nil {
 		corehttp.Error(w, err, "tree id is invalid")
 		return

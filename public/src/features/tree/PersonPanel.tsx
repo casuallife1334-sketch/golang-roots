@@ -196,6 +196,14 @@ export function PersonPanel({
                   value={person.metadata.occupation}
                 />
               )}
+              {person.metadata?.comment && (
+                <>
+                  <h3 className="section-gap">Комментарий</h3>
+                  <p className="person-comment-view">
+                    {person.metadata.comment}
+                  </p>
+                </>
+              )}
             </>
           ) : (
             <>

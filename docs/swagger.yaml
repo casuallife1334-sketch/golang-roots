@@ -25,6 +25,9 @@ definitions:
       metadata:
         additionalProperties: {}
         type: object
+      patronymic:
+        type: string
+        x-nullable: true
       photo_url:
         type: string
     type: object
@@ -118,6 +121,10 @@ definitions:
         type: string
       metadata:
         $ref: '#/definitions/internal_features_persons_transport_http.MetadataExample'
+      patronymic:
+        example: Petrovich
+        type: string
+        x-nullable: true
       photo_url:
         example: persons/01JQ2Q4K7Y8F6M2Z3N4P5R6S7T/photo
         type: string
@@ -157,6 +164,10 @@ definitions:
         type: string
       metadata:
         $ref: '#/definitions/internal_features_persons_transport_http.MetadataExample'
+      patronymic:
+        example: Petrovich
+        type: string
+        x-nullable: true
       photo_url:
         example: persons/01JQ2Q4K7Y8F6M2Z3N4P5R6S7T/photo
         type: string

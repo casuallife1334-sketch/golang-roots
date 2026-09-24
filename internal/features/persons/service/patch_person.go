@@ -13,6 +13,13 @@ func (s *PersonsService) PatchPerson(ctx context.Context, userID, treeID, id str
 	if input.BirthDate != nil && input.DeathDate != nil && *input.BirthDate != nil && *input.DeathDate != nil && (*input.DeathDate).Before(**input.BirthDate) {
 		return domain.Person{}, ErrInvalid
 	}
+	if input.Patronymic.Set {
+		patronymic, err := normalizePatronymic(input.Patronymic.Value)
+		if err != nil {
+			return domain.Person{}, err
+		}
+		input.Patronymic.Value = patronymic
+	}
 	if err := s.treeAccess.CanWriteTree(ctx, userID, treeID); err != nil {
 		return domain.Person{}, err
 	}

@@ -16,6 +16,7 @@ export const treeSchema = z.object({
 export const personSchema = z.object({
   id: z.string().min(1),
   first_name: z.string(),
+  patronymic: z.string().nullish(),
   last_name: z.string(),
   birth_date: z.string().nullish(),
   death_date: z.string().nullish(),

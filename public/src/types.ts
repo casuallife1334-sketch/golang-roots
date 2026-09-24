@@ -18,6 +18,7 @@ export interface Tree {
 export interface Person {
   id: string;
   first_name: string;
+  patronymic?: string | null;
   last_name: string;
   birth_date?: string | null;
   death_date?: string | null;
@@ -37,6 +38,7 @@ export interface Relationship {
 }
 export interface PersonInput {
   first_name: string;
+  patronymic?: string | null;
   last_name: string;
   birth_date?: string | null;
   death_date?: string | null;

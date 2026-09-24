@@ -7,7 +7,7 @@ import (
 )
 
 func (r *PersonsRepository) GetPersons(ctx context.Context, treeID string) ([]domain.Person, error) {
-	rows, err := r.db.Query(ctx, `SELECT id,first_name,last_name,birth_date,death_date,gender,photo_url,metadata,created_at,updated_at FROM persons WHERE tree_id=$1 ORDER BY id`, treeID)
+	rows, err := r.db.Query(ctx, `SELECT id,first_name,patronymic,last_name,birth_date,death_date,gender,photo_url,metadata,created_at,updated_at FROM persons WHERE tree_id=$1 ORDER BY id`, treeID)
 	if err != nil {
 		return nil, err
 	}
@@ -16,7 +16,7 @@ func (r *PersonsRepository) GetPersons(ctx context.Context, treeID string) ([]do
 	for rows.Next() {
 		var p domain.Person
 		var raw []byte
-		if err := rows.Scan(&p.ID, &p.FirstName, &p.LastName, &p.BirthDate, &p.DeathDate, &p.Gender, &p.PhotoURL, &raw, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.FirstName, &p.Patronymic, &p.LastName, &p.BirthDate, &p.DeathDate, &p.Gender, &p.PhotoURL, &raw, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
 		_ = json.Unmarshal(raw, &p.Metadata)

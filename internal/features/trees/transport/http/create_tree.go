@@ -21,7 +21,7 @@ import (
 // @Failure 500 {object} corehttp.ErrorResponse "internal server error"
 // @Router /trees [post]
 func (h *TreesHTTPHandler) CreateTree(w http.ResponseWriter, r *http.Request) {
-	userID, err := getUserID(r)
+	userID, err := request.GetUserID(r)
 	if err != nil {
 		corehttp.Error(w, err, "authentication is required")
 		return

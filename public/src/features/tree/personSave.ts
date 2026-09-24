@@ -10,22 +10,30 @@ export type PersonForm = {
   gender: string;
   city: string;
   occupation: string;
+  comment: string;
 };
 export function personInput(
   form: PersonForm,
   person: Person | null,
 ): PersonInput {
+  const {
+    patronymic: _legacyPatronymic,
+    comment: _previousComment,
+    ...metadata
+  } = person?.metadata ?? {};
+  const comment = form.comment.trim();
   return {
     first_name: form.first_name.trim(),
+    patronymic: form.patronymic.trim() || null,
     last_name: form.last_name.trim(),
     birth_date: form.birth_date ? `${form.birth_date}T00:00:00Z` : null,
     death_date: form.death_date ? `${form.death_date}T00:00:00Z` : null,
     gender: (form.gender || null) as PersonInput["gender"],
     metadata: {
-      ...person?.metadata,
-      patronymic: form.patronymic.trim(),
+      ...metadata,
       city: form.city.trim(),
       occupation: form.occupation.trim(),
+      ...(comment ? { comment } : {}),
     },
   };
 }

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"genealogy-tree/internal/core/transport/http/request"
 	corehttp "genealogy-tree/internal/core/transport/http/response"
 	"net/http"
 )
@@ -18,12 +19,12 @@ import (
 // @Failure 404 {object} corehttp.ErrorResponse "Tree not found"
 // @Router /trees/{tree_id} [delete]
 func (h *TreesHTTPHandler) DeleteTree(w http.ResponseWriter, r *http.Request) {
-	userID, err := getUserID(r)
+	userID, err := request.GetUserID(r)
 	if err != nil {
 		corehttp.Error(w, err, "authentication is required")
 		return
 	}
-	treeID, err := getTreeID(r)
+	treeID, err := request.GetTreeID(r)
 	if err != nil {
 		corehttp.Error(w, err, "tree id is invalid")
 		return

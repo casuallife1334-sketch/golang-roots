@@ -22,7 +22,7 @@ export const formatYears = (person: Person) => {
 };
 export const fullName = (person?: Person) =>
   person
-    ? [person.first_name, person.metadata?.patronymic, person.last_name]
+    ? [person.first_name, person.patronymic, person.last_name]
         .filter(Boolean)
         .join(" ")
     : "Человек";

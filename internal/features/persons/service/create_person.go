@@ -5,6 +5,7 @@ import (
 	"genealogy-tree/internal/core/domain"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 func (s *PersonsService) CreatePerson(ctx context.Context, userID, treeID string, input domain.CreatePersonInput) (domain.Person, error) {
@@ -14,10 +15,26 @@ func (s *PersonsService) CreatePerson(ctx context.Context, userID, treeID string
 	if input.Metadata == nil {
 		input.Metadata = map[string]any{}
 	}
+	patronymic, err := normalizePatronymic(input.Patronymic)
+	if err != nil {
+		return domain.Person{}, err
+	}
+	input.Patronymic = patronymic
 	if err := s.treeAccess.CanWriteTree(ctx, userID, treeID); err != nil {
 		return domain.Person{}, err
 	}
 	return s.personsRepository.CreatePerson(ctx, treeID, input)
+}
+
+func normalizePatronymic(value *string) (*string, error) {
+	if value == nil {
+		return nil, nil
+	}
+	trimmed := strings.TrimSpace(*value)
+	if trimmed == "" || utf8.RuneCountInString(trimmed) > 200 {
+		return nil, ErrInvalid
+	}
+	return &trimmed, nil
 }
 
 func validatePerson(first, last string, birth, death *time.Time, gender *domain.Gender) error {

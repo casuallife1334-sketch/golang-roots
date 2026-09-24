@@ -1147,6 +1147,10 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": {}
                 },
+                "patronymic": {
+                    "type": "string",
+                    "x-nullable": true
+                },
                 "photo_url": {
                     "type": "string"
                 }
@@ -1281,6 +1285,11 @@ const docTemplate = `{
                 "metadata": {
                     "$ref": "#/definitions/internal_features_persons_transport_http.MetadataExample"
                 },
+                "patronymic": {
+                    "type": "string",
+                    "x-nullable": true,
+                    "example": "Petrovich"
+                },
                 "photo_url": {
                     "type": "string",
                     "example": "persons/01JQ2Q4K7Y8F6M2Z3N4P5R6S7T/photo"
@@ -1337,6 +1346,11 @@ const docTemplate = `{
                 },
                 "metadata": {
                     "$ref": "#/definitions/internal_features_persons_transport_http.MetadataExample"
+                },
+                "patronymic": {
+                    "type": "string",
+                    "x-nullable": true,
+                    "example": "Petrovich"
                 },
                 "photo_url": {
                     "type": "string",

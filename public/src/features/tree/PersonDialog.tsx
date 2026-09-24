@@ -1,11 +1,13 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { ImagePlus, MessageSquareText, Trash2 } from "lucide-react";
 import { Button, Field, Modal, Notice, Select } from "../../shared/ui";
 import { useTreeCache } from "../../data/queries";
 import { dateInput, useObjectUrl, validImage } from "../../utils";
 import type { Person, Tree } from "../../types";
 import { personInput, PersonSave, type PersonForm } from "./personSave";
 import { PhotoCropDialog } from "./PhotoCropDialog";
+import { PersonPortrait } from "../../shared/PersonPortrait";
 
 export function PersonDialog({
   tree,
@@ -20,20 +22,24 @@ export function PersonDialog({
 }) {
   const cache = useTreeCache(tree.id);
   const save = useRef(new PersonSave(person));
+  const photoInput = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<PersonForm>({
     first_name: person?.first_name ?? "",
     last_name: person?.last_name ?? "",
-    patronymic: person?.metadata?.patronymic ?? "",
+    patronymic: person?.patronymic ?? "",
     birth_date: dateInput(person?.birth_date),
     death_date: dateInput(person?.death_date),
     gender: person?.gender ?? "",
     city: person?.metadata?.city ?? "",
     occupation: person?.metadata?.occupation ?? "",
+    comment: person?.metadata?.comment ?? "",
   });
   const [file, setFile] = useState<File>();
   const [cropFile, setCropFile] = useState<File>();
   const [removePhoto, setRemovePhoto] = useState(false);
   const preview = useObjectUrl(file);
+  const hasExistingPhoto = Boolean(person?.photo_url && !removePhoto);
+  const hasPhoto = Boolean(file || hasExistingPhoto);
   const [error, setError] = useState("");
   const mutation = useMutation({
     mutationFn: () =>
@@ -78,6 +84,7 @@ export function PersonDialog({
         title={person ? "Редактировать человека" : "Добавить человека"}
         onClose={onClose}
         busy={mutation.isPending}
+        wide
       >
         <form
           className="modal-form"
@@ -97,70 +104,143 @@ export function PersonDialog({
           }}
         >
           {error && <Notice>{error}</Notice>}
-          <fieldset disabled={mutation.isPending} className="form-fields">
-            <div className="form-grid">
-              {field("first_name", "Имя", "text", true)}
-              {field("patronymic", "Отчество")}
-              {field("last_name", "Фамилия", "text", true)}
-              {field("birth_date", "Дата рождения", "date")}
-              {field("death_date", "Дата смерти", "date")}
-            </div>
-            <Field label="Пол">
-              <Select
-                value={form.gender}
-                onChange={(event) =>
-                  setForm({ ...form, gender: event.target.value })
-                }
-              >
-                <option value="">Не указан</option>
-                <option value="female">Женский</option>
-                <option value="male">Мужской</option>
-                <option value="other">Другой</option>
-              </Select>
-            </Field>
-            <div className="form-grid">
-              {field("city", "Место / город")}
-              {field("occupation", "Род деятельности")}
-            </div>
-            <Field label="Фотография">
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(event) => {
-                  const next = event.target.files?.[0];
-                  event.target.value = "";
-                  if (!next) return;
-                  if (!validImage(next))
-                    return setError(
-                      "Поддерживаются JPEG, PNG и WebP до 9,5 МБ",
-                    );
-                  setCropFile(next);
-                  setRemovePhoto(false);
-                }}
-              />
-            </Field>
-            {file && preview && (
-              <div className="photo-selection">
-                <img src={preview} alt="Предпросмотр выбранной фотографии" />
+          <div className="person-form-layout">
+            <fieldset
+              disabled={mutation.isPending}
+              className="form-fields person-main-fields"
+            >
+              <div className="person-name-grid">
+                {field("first_name", "Имя", "text", true)}
+                {field("patronymic", "Отчество")}
+                {field("last_name", "Фамилия", "text", true)}
+              </div>
+              <div className="form-grid person-date-grid">
+                {field("birth_date", "Дата рождения", "date")}
+                {field("death_date", "Дата смерти", "date")}
+              </div>
+              <Field label="Пол">
+                <Select
+                  value={form.gender}
+                  onChange={(event) =>
+                    setForm({ ...form, gender: event.target.value })
+                  }
+                >
+                  <option value="">Не указан</option>
+                  <option value="female">Женский</option>
+                  <option value="male">Мужской</option>
+                  <option value="other">Другой</option>
+                </Select>
+              </Field>
+              <div className="form-grid">
+                {field("city", "Место / город")}
+                {field("occupation", "Род деятельности")}
+              </div>
+              <div className="field person-photo-field">
+                <span>Фотография</span>
+                <input
+                  ref={photoInput}
+                  hidden
+                  type="file"
+                  aria-label="Фотография"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(event) => {
+                    const next = event.target.files?.[0];
+                    event.target.value = "";
+                    if (!next) return;
+                    if (!validImage(next))
+                      return setError(
+                        "Поддерживаются JPEG, PNG и WebP до 9,5 МБ",
+                      );
+                    setCropFile(next);
+                    setRemovePhoto(false);
+                  }}
+                />
+                {hasPhoto ? (
+                  <div className="person-photo-control">
+                    {file && preview ? (
+                      <img
+                        className="photo-control-preview"
+                        src={preview}
+                        alt="Предпросмотр выбранной фотографии"
+                      />
+                    ) : (
+                      person && (
+                        <PersonPortrait
+                          person={person}
+                          treeId={tree.id}
+                          className="photo-control-preview"
+                        />
+                      )
+                    )}
+                    <span className="person-photo-copy">
+                      <strong>
+                        {file
+                          ? "Фотография подготовлена"
+                          : "Фотография добавлена"}
+                      </strong>
+                      <small>{file?.name || "Фото профиля"}</small>
+                    </span>
+                    <button
+                      type="button"
+                      className="person-photo-remove"
+                      onClick={() => {
+                        setFile(undefined);
+                        setRemovePhoto(Boolean(person?.photo_url));
+                      }}
+                    >
+                      <Trash2 size={14} />
+                      Удалить
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="person-photo-upload"
+                    aria-label="Загрузить фотографию"
+                    onClick={() => photoInput.current?.click()}
+                  >
+                    <span className="person-photo-upload-icon">
+                      <ImagePlus size={17} />
+                    </span>
+                    <span>
+                      <strong>Загрузить фотографию</strong>
+                      <small>JPEG, PNG или WebP до 9,5 МБ</small>
+                    </span>
+                  </button>
+                )}
+                {removePhoto && (
+                  <small className="photo-remove-note">
+                    Фотография будет удалена после сохранения
+                  </small>
+                )}
+              </div>
+            </fieldset>
+            <section className="person-comment-section">
+              <div className="person-comment-heading">
+                <span className="person-comment-icon">
+                  <MessageSquareText size={17} />
+                </span>
                 <span>
-                  <strong>Фотография подготовлена</strong>
-                  <small>{file.name}</small>
+                  <strong>Комментарий</strong>
+                  <small>Воспоминания и важные сведения о человеке</small>
                 </span>
               </div>
-            )}
-            {(file || person?.photo_url) && (
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setFile(undefined);
-                  setRemovePhoto(true);
-                }}
-              >
-                Удалить фотографию
-              </Button>
-            )}
-            {removePhoto && <p>Фотография будет удалена</p>}
-          </fieldset>
+              <textarea
+                className="person-comment-textarea"
+                aria-label="Комментарий"
+                placeholder="Добавьте воспоминания, биографические сведения или важные заметки о человеке…"
+                maxLength={5000}
+                disabled={mutation.isPending}
+                value={form.comment}
+                onChange={(event) =>
+                  setForm({ ...form, comment: event.target.value })
+                }
+              />
+              <span className="comment-counter" aria-live="polite">
+                {form.comment.length.toLocaleString("ru-RU")} / 5 000
+              </span>
+            </section>
+          </div>
           <div className="modal-actions">
             <Button
               variant="secondary"
