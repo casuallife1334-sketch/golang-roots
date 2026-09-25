@@ -1070,6 +1070,75 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Изменение метаданных существующей связи",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "relationships"
+                ],
+                "summary": "Изменение связи",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ULID изменяемой связи",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "PatchRelationship тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_relationships_transport_http.PatchRelationshipRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешно изменённая связь",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_relationships_transport_http.RelationshipResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Relationship not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/users/me": {
@@ -1147,6 +1216,10 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": {}
                 },
+                "patronymic": {
+                    "type": "string",
+                    "x-nullable": true
+                },
                 "photo_url": {
                     "type": "string"
                 }
@@ -1172,6 +1245,19 @@ const docTemplate = `{
             "x-enum-varnames": [
                 "RelationshipParentChild",
                 "RelationshipSpouse"
+            ]
+        },
+        "genealogy-tree_internal_core_domain.TreeRole": {
+            "type": "string",
+            "enum": [
+                "owner",
+                "editor",
+                "viewer"
+            ],
+            "x-enum-varnames": [
+                "TreeRoleOwner",
+                "TreeRoleEditor",
+                "TreeRoleViewer"
             ]
         },
         "genealogy-tree_internal_core_transport_http_response.ErrorResponse": {
@@ -1281,6 +1367,11 @@ const docTemplate = `{
                 "metadata": {
                     "$ref": "#/definitions/internal_features_persons_transport_http.MetadataExample"
                 },
+                "patronymic": {
+                    "type": "string",
+                    "x-nullable": true,
+                    "example": "Petrovich"
+                },
                 "photo_url": {
                     "type": "string",
                     "example": "persons/01JQ2Q4K7Y8F6M2Z3N4P5R6S7T/photo"
@@ -1338,6 +1429,11 @@ const docTemplate = `{
                 "metadata": {
                     "$ref": "#/definitions/internal_features_persons_transport_http.MetadataExample"
                 },
+                "patronymic": {
+                    "type": "string",
+                    "x-nullable": true,
+                    "example": "Petrovich"
+                },
                 "photo_url": {
                     "type": "string",
                     "example": "persons/01JQ2Q4K7Y8F6M2Z3N4P5R6S7T/photo"
@@ -1359,6 +1455,9 @@ const docTemplate = `{
                     ],
                     "example": "parent"
                 },
+                "metadata": {
+                    "type": "object"
+                },
                 "person1_id": {
                     "type": "string",
                     "example": "01JQ2Q4K7Y8F6M2Z3N4P5R6S7T"
@@ -1374,6 +1473,14 @@ const docTemplate = `{
                         }
                     ],
                     "example": "parent_child"
+                }
+            }
+        },
+        "internal_features_relationships_transport_http.PatchRelationshipRequest": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "type": "object"
                 }
             }
         },
@@ -1396,6 +1503,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "01JQ2Q4K9Y8F6M2Z3N4P5R6S7V"
                 },
+                "metadata": {
+                    "type": "object"
+                },
                 "person1_id": {
                     "type": "string",
                     "example": "01JQ2Q4K7Y8F6M2Z3N4P5R6S7T"
@@ -1411,6 +1521,11 @@ const docTemplate = `{
                         }
                     ],
                     "example": "parent_child"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "x-nullable": true,
+                    "example": "2026-02-26T10:35:00Z"
                 }
             }
         },
@@ -1450,6 +1565,14 @@ const docTemplate = `{
                 "owner_id": {
                     "type": "string",
                     "example": "01JQ2Q4K8Z8F6M2Z3N4P5R6S7U"
+                },
+                "role": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_domain.TreeRole"
+                        }
+                    ],
+                    "example": "owner"
                 },
                 "updated_at": {
                     "type": "string",

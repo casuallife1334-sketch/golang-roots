@@ -16,6 +16,7 @@ const tree = {
 const person = (id: string) => ({
   id,
   first_name: id,
+  patronymic: null as string | null,
   last_name: "Тестовый",
   metadata: { city: "Москва" },
   created_at: date,
@@ -30,13 +31,21 @@ const initial = [
   "childB",
   "grandchild",
 ].map(person);
-const relation = (id: string, a: string, b: string, type = "parent_child") => ({
+const relation = (
+  id: string,
+  a: string,
+  b: string,
+  type = "parent_child",
+  metadata: Record<string, unknown> = {},
+) => ({
   id,
   person1_id: a,
   person2_id: b,
   type,
   direction: type === "spouse" ? null : "parent",
+  metadata,
   created_at: date,
+  updated_at: null as string | null,
 });
 const relationships = [
   relation("ab", "motherA", "fatherA", "spouse"),
@@ -46,17 +55,22 @@ const relationships = [
   relation("bx", "fatherA", "childA"),
   relation("cy", "motherB", "childB"),
   relation("dy", "fatherB", "childB"),
-  relation("xz", "childA", "grandchild"),
+  relation("xz", "childA", "grandchild", "parent_child", {
+    comment: "Вместе переехали во Владивосток\nи сохранили семейный архив.",
+    source: "archive",
+  }),
   relation("yz", "childB", "grandchild"),
 ];
 async function fixture(
   page: Page,
   meStatus = 200,
   photoFailuresBeforeSuccess = 1,
+  role: "owner" | "editor" | "viewer" = "owner",
 ) {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   let people = structuredClone(initial);
+  let relations = structuredClone(relationships);
   let creates = 0;
   let photoFailures = photoFailuresBeforeSuccess;
   await page.addInitScript(() =>
@@ -73,8 +87,40 @@ async function fixture(
       });
     if (path.endsWith("/users/me"))
       return json(meStatus === 200 ? user : {}, meStatus);
-    if (path.endsWith("/trees")) return json([tree]);
-    if (path.endsWith("/relationships")) return json(relationships);
+    if (path.endsWith("/trees"))
+      return json([
+        {
+          ...tree,
+          owner_id: role === "owner" ? user.id : "other",
+          role,
+        },
+      ]);
+    if (path.endsWith("/relationships")) {
+      if (method === "POST") {
+        const saved = {
+          id: `relation${relations.length + 1}`,
+          ...route.request().postDataJSON(),
+          created_at: date,
+          updated_at: null,
+        };
+        relations.push(saved);
+        return json(saved, 201);
+      }
+      return json(relations);
+    }
+    if (method === "PATCH" && path.includes("/relationships/")) {
+      const id = path.split("/").at(-1)!;
+      relations = relations.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              ...route.request().postDataJSON(),
+              updated_at: date,
+            }
+          : item,
+      );
+      return json(relations.find((item) => item.id === id));
+    }
     if (path.endsWith("/photo")) {
       if (method === "POST") {
         if (photoFailures-- > 0) return json({}, 500);
@@ -117,6 +163,9 @@ async function fixture(
     errors,
     get creates() {
       return creates;
+    },
+    get relations() {
+      return relations;
     },
   };
 }
@@ -185,7 +234,9 @@ test("failed photo upload retries without creating a duplicate", async ({
     buffer: Buffer.from(png, "base64"),
   });
   await page.getByRole("button", { name: "Применить фото" }).click();
-  await expect(page.locator(".photo-selection img")).toBeVisible();
+  await expect(
+    page.locator(".person-photo-control .photo-control-preview"),
+  ).toBeVisible();
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Добавить человека", exact: true })
@@ -228,6 +279,19 @@ test("uploaded photo appears immediately when the API returns binary content", a
   await page.getByRole("button", { name: "Применить фото" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.locator(".profile-photo img")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Редактировать", exact: true })
+    .click();
+  await expect(page.locator(".person-photo-control")).toBeVisible();
+  await expect(
+    page.locator(".person-photo-control").getByRole("button", {
+      name: "Удалить",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Загрузить фотографию", exact: true }),
+  ).toHaveCount(0);
   expect(state.errors).toEqual([]);
 });
 test("tree selectors keep their controls separated", async ({ page }) => {
@@ -262,7 +326,7 @@ test("network/server failure during session check preserves token", async ({
   ).toBe("test-token");
   await expect(page).toHaveURL(/\/trees\/tree$/);
 });
-test("clearing person metadata updates the profile and survives reload", async ({
+test("patronymic, comment and cleared metadata survive reload", async ({
   page,
 }) => {
   const state = await fixture(page);
@@ -270,14 +334,216 @@ test("clearing person metadata updates the profile and survives reload", async (
   await page
     .getByRole("button", { name: "Редактировать", exact: true })
     .click();
+  await page.getByLabel("Отчество", { exact: true }).fill("Петрович");
+  await page
+    .getByLabel("Комментарий", { exact: true })
+    .fill("Первая строка\nВторая строка");
   await page.getByLabel("Место / город", { exact: true }).fill("");
   await page.getByRole("button", { name: "Сохранить", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(".detail-panel h2")).toContainText(
+    "childA Петрович Тестовый",
+  );
   await expect(page.locator(".detail-panel")).not.toContainText("Москва");
+  await expect(page.locator(".person-comment-view")).toHaveText(
+    "Первая строка\nВторая строка",
+  );
   await page.reload();
-  await expect(page.locator(".detail-panel h2")).toContainText("childA");
+  await expect(page.locator(".detail-panel h2")).toContainText(
+    "childA Петрович Тестовый",
+  );
   await expect(page.locator(".detail-panel")).not.toContainText("Москва");
+  await expect(page.locator(".person-comment-view")).toHaveText(
+    "Первая строка\nВторая строка",
+  );
+  await page
+    .getByRole("button", { name: "Редактировать", exact: true })
+    .click();
+  await page.getByLabel("Отчество", { exact: true }).fill("");
+  await page.getByLabel("Комментарий", { exact: true }).fill("");
+  await page.getByRole("button", { name: "Сохранить", exact: true }).click();
+  await expect(page.locator(".detail-panel h2")).toHaveText("childA Тестовый");
+  await expect(page.locator(".person-comment-view")).toHaveCount(0);
   expect(state.errors).toEqual([]);
+});
+test("relationship comment can be added during relationship creation", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  await page.goto("/trees/tree?person=childA");
+  await page.getByRole("button", { name: "Родственники" }).click();
+  await page
+    .getByRole("button", { name: "Добавить связь", exact: true })
+    .click();
+  await page
+    .getByRole("dialog")
+    .getByRole("combobox", { name: "Ребёнок" })
+    .selectOption({ label: "motherB Тестовый" });
+  await page
+    .getByLabel("Комментарий", { exact: true })
+    .fill("Комментарий новой связи");
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Добавить связь", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.locator(".relation-comment-preview", {
+      hasText: "Комментарий новой связи",
+    }),
+  ).toBeVisible();
+  expect(
+    state.relations.some(
+      (item) => item.metadata.comment === "Комментарий новой связи",
+    ),
+  ).toBe(true);
+  expect(state.errors).toEqual([]);
+});
+test("relationship comment is edited, cleared and keeps other metadata", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  await page.goto("/trees/tree?person=childA");
+  const cards = page.locator(".react-flow__node-person");
+  const positions = () =>
+    cards.evaluateAll((nodes) =>
+      nodes.map((node) => [
+        node.getAttribute("data-id"),
+        (node as HTMLElement).style.transform,
+      ]),
+    );
+  const before = await positions();
+  await page.getByRole("button", { name: "Родственники" }).click();
+  await page
+    .locator(".relation-comment-preview", { hasText: "Вместе переехали" })
+    .click();
+  await expect(page.getByText("Возможность добавлять документы скоро появится")).toBeVisible();
+  const textarea = page.getByLabel("Комментарий", { exact: true });
+  await textarea.fill("Обновлённый комментарий");
+  await page.getByRole("button", { name: "Сохранить", exact: true }).click();
+  await expect(
+    page.locator(".relation-comment-preview", {
+      hasText: "Обновлённый комментарий",
+    }),
+  ).toBeVisible();
+  expect(state.relations.find((item) => item.id === "xz")?.metadata.source).toBe(
+    "archive",
+  );
+  await expect.poll(positions).toEqual(before);
+
+  const grandchildRow = page.locator(".relation-row", { hasText: "grandchild" });
+  await grandchildRow
+    .getByRole("button", { name: "Открыть сведения о связи" })
+    .click();
+  await page.getByLabel("Комментарий", { exact: true }).fill("   ");
+  await page.getByRole("button", { name: "Сохранить", exact: true }).click();
+  await expect(grandchildRow.locator(".relation-comment-preview")).toHaveCount(0);
+  expect(state.relations.find((item) => item.id === "xz")?.metadata).toEqual({
+    source: "archive",
+  });
+  expect(state.errors).toEqual([]);
+});
+test("viewer can read but cannot edit a relationship comment", async ({
+  page,
+}) => {
+  const state = await fixture(page, 200, 1, "viewer");
+  await page.goto("/trees/tree?person=childA");
+  await page.getByRole("button", { name: "Родственники" }).click();
+  await page
+    .locator(".relation-comment-preview", { hasText: "Вместе переехали" })
+    .click();
+  await expect(page.getByText("Возможность добавлять документы скоро появится")).toBeVisible();
+  await expect(page.getByRole("dialog")).toContainText(
+    "Вместе переехали во Владивосток",
+  );
+  await expect(page.getByLabel("Комментарий", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Сохранить", exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("dialog")
+    .locator(".modal-actions")
+    .getByRole("button", { name: "Закрыть", exact: true })
+    .click();
+  expect(state.errors).toEqual([]);
+});
+test("editor can update a relationship comment", async ({ page }) => {
+  const state = await fixture(page, 200, 1, "editor");
+  await page.goto("/trees/tree?person=childA");
+  await page.getByRole("button", { name: "Родственники" }).click();
+  await page
+    .locator(".relation-comment-preview", { hasText: "Вместе переехали" })
+    .click();
+  await page
+    .getByLabel("Комментарий", { exact: true })
+    .fill("Комментарий редактора");
+  await page.getByRole("button", { name: "Сохранить", exact: true }).click();
+  await expect(
+    page.locator(".relation-comment-preview", {
+      hasText: "Комментарий редактора",
+    }),
+  ).toBeVisible();
+  expect(state.errors).toEqual([]);
+});
+test("comment editor is responsive, limited and scrolls without a visible bar", async ({
+  page,
+}) => {
+  await fixture(page);
+  await page.goto("/trees/tree");
+  await page
+    .getByRole("button", { name: "Добавить человека", exact: true })
+    .click();
+  const main = page.locator(".person-main-fields");
+  const comment = page.locator(".person-comment-section");
+  const desktopMain = await main.boundingBox();
+  const desktopComment = await comment.boundingBox();
+  expect(desktopComment!.x).toBeGreaterThan(
+    desktopMain!.x + desktopMain!.width,
+  );
+  const firstNameBox = await page
+    .getByLabel("Имя", { exact: true })
+    .boundingBox();
+  const birthBox = await page
+    .getByLabel("Дата рождения", { exact: true })
+    .boundingBox();
+  const deathBox = await page
+    .getByLabel("Дата смерти", { exact: true })
+    .boundingBox();
+  expect(birthBox!.y).toBe(deathBox!.y);
+  expect(birthBox!.y).toBeGreaterThan(firstNameBox!.y + firstNameBox!.height);
+  await expect(
+    page.getByRole("button", { name: "Загрузить фотографию", exact: true }),
+  ).toBeVisible();
+
+  const textarea = page.getByLabel("Комментарий", { exact: true });
+  await textarea.fill("Строка комментария\n".repeat(400));
+  await expect(textarea).toHaveValue(/Строка комментария/);
+  expect(await textarea.inputValue()).toHaveLength(5000);
+  const scroll = await textarea.evaluate((element) => {
+    const field = element as HTMLTextAreaElement;
+    field.scrollTop = field.scrollHeight;
+    return {
+      scrollable: field.scrollHeight > field.clientHeight,
+      scrolled: field.scrollTop > 0,
+      scrollbarWidth: getComputedStyle(field).scrollbarWidth,
+    };
+  });
+  expect(scroll.scrollable).toBe(true);
+  expect(scroll.scrolled).toBe(true);
+  expect(scroll.scrollbarWidth).toBe("none");
+  await page.screenshot({
+    path: "test-results/comment-editor-desktop-reviewed.png",
+    fullPage: true,
+  });
+
+  await page.setViewportSize({ width: 600, height: 820 });
+  const mobileMain = await main.boundingBox();
+  const mobileComment = await comment.boundingBox();
+  expect(mobileComment!.y).toBeGreaterThan(mobileMain!.y + mobileMain!.height);
+  await page.screenshot({
+    path: "test-results/comment-editor-reviewed.png",
+    fullPage: true,
+  });
 });
 test("logout clears cached trees before signing in again", async ({ page }) => {
   await fixture(page);

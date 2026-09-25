@@ -11,6 +11,7 @@ export interface User {
 export interface Tree {
   id: string;
   owner_id: string;
+  role?: "owner" | "editor" | "viewer";
   name: string;
   created_at: string;
   updated_at: string;
@@ -18,6 +19,7 @@ export interface Tree {
 export interface Person {
   id: string;
   first_name: string;
+  patronymic?: string | null;
   last_name: string;
   birth_date?: string | null;
   death_date?: string | null;
@@ -33,10 +35,13 @@ export interface Relationship {
   person2_id: string;
   type: RelationshipType;
   direction?: RelationshipDirection | null;
+  metadata: Record<string, unknown>;
   created_at: string;
+  updated_at?: string | null;
 }
 export interface PersonInput {
   first_name: string;
+  patronymic?: string | null;
   last_name: string;
   birth_date?: string | null;
   death_date?: string | null;
@@ -48,6 +53,10 @@ export interface RelationshipInput {
   person2_id: string;
   type: RelationshipType;
   direction?: RelationshipDirection;
+  metadata?: Record<string, unknown>;
+}
+export interface PatchRelationshipInput {
+  metadata?: Record<string, unknown>;
 }
 
 export const EMPTY_ARRAY = <T>(value: T[] | null | undefined): T[] =>

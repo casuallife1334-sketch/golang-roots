@@ -4,6 +4,7 @@ import { personInput, PersonSave, type PersonForm } from "./personSave";
 const person = {
   id: "p",
   first_name: "A",
+  patronymic: "Old",
   last_name: "B",
   metadata: { city: "Old", patronymic: "Old", occupation: "Old" },
   created_at: "",
@@ -14,17 +15,35 @@ const form: PersonForm = {
   city: "",
   patronymic: "",
   occupation: "",
+  comment: "",
   birth_date: "",
   death_date: "",
   gender: "",
 };
 afterEach(() => vi.restoreAllMocks());
 it("clears metadata explicitly", () => {
-  expect(personInput(form, person).metadata).toEqual({
+  const input = personInput(form, person);
+  expect(input.patronymic).toBeNull();
+  expect(input.metadata).toEqual({
     city: "",
-    patronymic: "",
     occupation: "",
   });
+});
+it("stores and clears a trimmed comment without losing metadata", () => {
+  const withComment = personInput(
+    { ...form, comment: "  Первая строка\nВторая строка  " },
+    { ...person, metadata: { ...person.metadata, custom: "kept" } },
+  );
+  expect(withComment.metadata).toMatchObject({
+    comment: "Первая строка\nВторая строка",
+    custom: "kept",
+  });
+  expect(
+    personInput(form, {
+      ...person,
+      metadata: { ...person.metadata, comment: "old" },
+    }).metadata,
+  ).not.toHaveProperty("comment");
 });
 it("does not create another person when retrying a failed photo upload", async () => {
   const create = vi.spyOn(api, "createPerson").mockResolvedValue(person);

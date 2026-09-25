@@ -25,6 +25,9 @@ definitions:
       metadata:
         additionalProperties: {}
         type: object
+      patronymic:
+        type: string
+        x-nullable: true
       photo_url:
         type: string
     type: object
@@ -44,6 +47,16 @@ definitions:
     x-enum-varnames:
     - RelationshipParentChild
     - RelationshipSpouse
+  genealogy-tree_internal_core_domain.TreeRole:
+    enum:
+    - owner
+    - editor
+    - viewer
+    type: string
+    x-enum-varnames:
+    - TreeRoleOwner
+    - TreeRoleEditor
+    - TreeRoleViewer
   genealogy-tree_internal_core_transport_http_response.ErrorResponse:
     properties:
       error:
@@ -118,6 +131,10 @@ definitions:
         type: string
       metadata:
         $ref: '#/definitions/internal_features_persons_transport_http.MetadataExample'
+      patronymic:
+        example: Petrovich
+        type: string
+        x-nullable: true
       photo_url:
         example: persons/01JQ2Q4K7Y8F6M2Z3N4P5R6S7T/photo
         type: string
@@ -157,6 +174,10 @@ definitions:
         type: string
       metadata:
         $ref: '#/definitions/internal_features_persons_transport_http.MetadataExample'
+      patronymic:
+        example: Petrovich
+        type: string
+        x-nullable: true
       photo_url:
         example: persons/01JQ2Q4K7Y8F6M2Z3N4P5R6S7T/photo
         type: string
@@ -170,6 +191,8 @@ definitions:
         allOf:
         - $ref: '#/definitions/genealogy-tree_internal_core_domain.RelationshipDirection'
         example: parent
+      metadata:
+        type: object
       person1_id:
         example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
         type: string
@@ -180,6 +203,11 @@ definitions:
         allOf:
         - $ref: '#/definitions/genealogy-tree_internal_core_domain.RelationshipType'
         example: parent_child
+    type: object
+  internal_features_relationships_transport_http.PatchRelationshipRequest:
+    properties:
+      metadata:
+        type: object
     type: object
   internal_features_relationships_transport_http.RelationshipResponse:
     properties:
@@ -193,6 +221,8 @@ definitions:
       id:
         example: 01JQ2Q4K9Y8F6M2Z3N4P5R6S7V
         type: string
+      metadata:
+        type: object
       person1_id:
         example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
         type: string
@@ -203,6 +233,10 @@ definitions:
         allOf:
         - $ref: '#/definitions/genealogy-tree_internal_core_domain.RelationshipType'
         example: parent_child
+      updated_at:
+        example: "2026-02-26T10:35:00Z"
+        type: string
+        x-nullable: true
     type: object
   internal_features_trees_transport_http.CreateTreeRequest:
     properties:
@@ -230,6 +264,10 @@ definitions:
       owner_id:
         example: 01JQ2Q4K8Z8F6M2Z3N4P5R6S7U
         type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/genealogy-tree_internal_core_domain.TreeRole'
+        example: owner
       updated_at:
         example: "2026-02-26T10:30:00Z"
         type: string
@@ -938,6 +976,51 @@ paths:
       security:
       - BearerAuth: []
       summary: Получение связи
+      tags:
+      - relationships
+    patch:
+      consumes:
+      - application/json
+      description: Изменение метаданных существующей связи
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: ULID изменяемой связи
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: PatchRelationship тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_relationships_transport_http.PatchRelationshipRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешно изменённая связь
+          schema:
+            $ref: '#/definitions/internal_features_relationships_transport_http.RelationshipResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Relationship not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Изменение связи
       tags:
       - relationships
   /users/me:

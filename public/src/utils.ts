@@ -22,10 +22,12 @@ export const formatYears = (person: Person) => {
 };
 export const fullName = (person?: Person) =>
   person
-    ? [person.first_name, person.metadata?.patronymic, person.last_name]
+    ? [person.first_name, person.patronymic, person.last_name]
         .filter(Boolean)
         .join(" ")
     : "Человек";
+export const metadataComment = (metadata?: Record<string, unknown> | null) =>
+  typeof metadata?.comment === "string" ? metadata.comment : "";
 export const dateInput = (value?: string | null) =>
   value ? value.slice(0, 10) : "";
 export const validImage = (file: File) =>

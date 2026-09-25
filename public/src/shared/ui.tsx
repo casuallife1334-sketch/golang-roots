@@ -87,12 +87,14 @@ export function Modal({
   onClose,
   wide = false,
   busy = false,
+  className = "",
 }: {
-  title: string;
+  title: ReactNode;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
   busy?: boolean;
+  className?: string;
 }) {
   return (
     <Dialog.Root
@@ -104,7 +106,7 @@ export function Modal({
       <Dialog.Portal>
         <Dialog.Overlay className="modal-backdrop">
           <Dialog.Content
-            className={`modal ${wide ? "wide" : ""}`}
+            className={`modal ${wide ? "wide" : ""} ${className}`}
             aria-describedby={undefined}
           >
             <div className="modal-head">

@@ -19,7 +19,7 @@ import (
 // @Failure 500 {object} corehttp.ErrorResponse "internal server error"
 // @Router /trees/{tree_id}/relationships [get]
 func (h *RelationshipsHTTPHandler) GetRelationships(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, err := getTreeContext(r)
+	userID, treeID, err := request.GetTreeContext(r)
 	if err != nil {
 		corehttp.Error(w, err, "tree access is invalid")
 		return

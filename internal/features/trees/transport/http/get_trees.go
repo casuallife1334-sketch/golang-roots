@@ -1,6 +1,7 @@
 package http
 
 import (
+	"genealogy-tree/internal/core/transport/http/request"
 	corehttp "genealogy-tree/internal/core/transport/http/response"
 	"net/http"
 )
@@ -16,7 +17,7 @@ import (
 // @Failure 500 {object} corehttp.ErrorResponse "internal server error"
 // @Router /trees [get]
 func (h *TreesHTTPHandler) GetTrees(w http.ResponseWriter, r *http.Request) {
-	userID, err := getUserID(r)
+	userID, err := request.GetUserID(r)
 	if err != nil {
 		corehttp.Error(w, err, "authentication is required")
 		return

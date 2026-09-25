@@ -5,8 +5,8 @@ export const CARD_WIDTH = 240,
 export type Point = { x: number; y: number };
 // A person has one card. Only non-overlapping pairs are packed together;
 // remarriages remain distinct relations rather than a transitive spouse union.
-export function layoutFamilies(model: FamilyModel, compact = false) {
-  const gap = compact ? 32 : 48;
+export function layoutFamilies(model: FamilyModel) {
+  const gap = 48;
   const groups = new Map<string, string[]>(),
     groupOf = new Map<string, string>();
   const canPair = (a: string, b: string) => {
@@ -44,8 +44,8 @@ export function layoutFamilies(model: FamilyModel, compact = false) {
   const graph = new dagre.graphlib.Graph()
     .setGraph({
       rankdir: "TB",
-      nodesep: compact ? 48 : 80,
-      ranksep: compact ? 64 : 88,
+      nodesep: 80,
+      ranksep: 88,
       marginx: 24,
       marginy: 24,
     })

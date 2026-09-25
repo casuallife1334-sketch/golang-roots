@@ -35,7 +35,9 @@ function TreeScreen({ treeId }: { treeId?: string }) {
     people.data?.find((person) => person.id === selectedId) ?? null;
   const editing =
     people.data?.find((person) => person.id === editingId) ?? null;
-  const owner = tree?.owner_id === user?.id;
+  const canWrite = tree?.role
+    ? tree.role === "owner" || tree.role === "editor"
+    : tree?.owner_id === user?.id;
   useEffect(() => {
     if (tree && user)
       sessionStorage.setItem(`roots:last-tree:${user.id}`, tree.id);
@@ -132,7 +134,7 @@ function TreeScreen({ treeId }: { treeId?: string }) {
           onChange={(id) => navigate(`/trees/${id}`)}
           onCreate={() => setDialog("tree")}
         />
-        {owner && (
+        {canWrite && (
           <Button
             onClick={() => {
               setEditingId(null);
@@ -180,7 +182,7 @@ function TreeScreen({ treeId }: { treeId?: string }) {
               title="Дерево пока пусто"
               text="Добавьте первого человека."
               action={
-                owner && (
+                canWrite && (
                   <Button
                     onClick={() => {
                       setEditingId(null);
@@ -201,7 +203,7 @@ function TreeScreen({ treeId }: { treeId?: string }) {
             tree={tree}
             people={people.data ?? []}
             relationships={relationships.data ?? []}
-            owner={owner}
+            editable={canWrite}
             onClose={() => select(null)}
             onEdit={() => {
               setEditingId(selected.id);
@@ -212,7 +214,7 @@ function TreeScreen({ treeId }: { treeId?: string }) {
           />
         )}
       </div>
-      {dialog === "person" && owner && (
+      {dialog === "person" && canWrite && (
         <PersonDialog
           tree={tree}
           person={editing}
@@ -223,7 +225,7 @@ function TreeScreen({ treeId }: { treeId?: string }) {
           }}
         />
       )}
-      {dialog === "relationship" && owner && (
+      {dialog === "relationship" && canWrite && (
         <RelationshipDialog
           tree={tree}
           people={people.data ?? []}

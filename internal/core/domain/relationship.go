@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"genealogy-tree/internal/core/nullable"
+	"time"
+)
 
 type RelationshipType string
 type RelationshipDirection string
@@ -20,7 +23,9 @@ type Relationship struct {
 	Person2ID string                 `json:"person2_id"`
 	Type      RelationshipType       `json:"type"`
 	Direction *RelationshipDirection `json:"direction,omitempty"`
+	Metadata  map[string]any         `json:"metadata"`
 	CreatedAt time.Time              `json:"created_at"`
+	UpdatedAt *time.Time             `json:"updated_at"`
 }
 
 type CreateRelationshipInput struct {
@@ -28,4 +33,9 @@ type CreateRelationshipInput struct {
 	Person2ID string                 `json:"person2_id"`
 	Type      RelationshipType       `json:"type"`
 	Direction *RelationshipDirection `json:"direction"`
+	Metadata  map[string]any         `json:"metadata"`
+}
+
+type PatchRelationshipInput struct {
+	Metadata nullable.Value[map[string]any] `json:"metadata" swaggertype:"object" extensions:"x-nullable"`
 }

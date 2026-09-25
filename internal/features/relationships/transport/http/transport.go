@@ -11,6 +11,7 @@ type RelationshipsService interface {
 	CreateRelationship(context.Context, string, string, domain.CreateRelationshipInput) (domain.Relationship, error)
 	GetRelationship(context.Context, string, string, string) (domain.Relationship, error)
 	GetRelationships(context.Context, string, string, string) ([]domain.Relationship, error)
+	PatchRelationship(context.Context, string, string, string, domain.PatchRelationshipInput) (domain.Relationship, error)
 	DeleteRelationship(context.Context, string, string, string) error
 }
 
@@ -27,6 +28,7 @@ func (h *RelationshipsHTTPHandler) Routes() []server.Route {
 		{Method: http.MethodPost, Path: "/trees/{tree_id}/relationships", Handler: h.CreateRelationship},
 		{Method: http.MethodGet, Path: "/trees/{tree_id}/relationships", Handler: h.GetRelationships},
 		{Method: http.MethodGet, Path: "/trees/{tree_id}/relationships/{id}", Handler: h.GetRelationship},
+		{Method: http.MethodPatch, Path: "/trees/{tree_id}/relationships/{id}", Handler: h.PatchRelationship},
 		{Method: http.MethodDelete, Path: "/trees/{tree_id}/relationships/{id}", Handler: h.DeleteRelationship},
 	}
 }

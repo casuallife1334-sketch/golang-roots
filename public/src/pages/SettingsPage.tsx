@@ -17,13 +17,11 @@ import { keys, treeQuery } from "../data/queries";
 import { readPreferences } from "../data/preferences";
 
 interface Preferences {
-  compact: boolean;
   portraits: boolean;
   minimap: boolean;
   lineWidth: "thin" | "medium";
 }
 const defaults: Preferences = {
-  compact: false,
   portraits: true,
   minimap: true,
   lineWidth: "medium",
@@ -132,12 +130,6 @@ export function SettingsPage() {
               <p>Настройки сохраняются в этом браузере</p>
             </div>
           </div>
-          <Toggle
-            label="Компактные карточки"
-            description="Уменьшить расстояние между людьми"
-            value={draft.compact}
-            onChange={(value) => setDraft({ ...draft, compact: value })}
-          />
           <Toggle
             label="Показывать портреты"
             description="Использовать загруженные фотографии"

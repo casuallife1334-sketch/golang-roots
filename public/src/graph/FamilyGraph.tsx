@@ -27,8 +27,8 @@ export function FamilyGraph({
   const prefs = usePreferences();
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const graph = useMemo(
-    () => buildGraph(people, relationships, prefs.compact),
-    [people, relationships, prefs.compact],
+    () => buildGraph(people, relationships),
+    [people, relationships],
   );
   const nodes: PersonGraphNode[] = useMemo(
     () =>

@@ -28,5 +28,6 @@ func (r *TreesRepository) CreateTree(ctx context.Context, ownerID string, input 
 	if err := tx.Commit(ctx); err != nil {
 		return domain.Tree{}, err
 	}
+	tree.Role = domain.TreeRoleOwner
 	return tree, nil
 }
