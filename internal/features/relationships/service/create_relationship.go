@@ -7,6 +7,11 @@ import (
 )
 
 func (s *RelationshipsService) CreateRelationship(ctx context.Context, userID, treeID string, in domain.CreateRelationshipInput) (domain.Relationship, error) {
+	metadata, err := normalizeMetadata(in.Metadata)
+	if err != nil {
+		return domain.Relationship{}, err
+	}
+	in.Metadata = metadata
 	if _, err := ulid.Parse(in.Person1ID); err != nil {
 		return domain.Relationship{}, ErrInvalid
 	}

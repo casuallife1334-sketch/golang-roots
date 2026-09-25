@@ -26,6 +26,8 @@ export const fullName = (person?: Person) =>
         .filter(Boolean)
         .join(" ")
     : "Человек";
+export const metadataComment = (metadata?: Record<string, unknown> | null) =>
+  typeof metadata?.comment === "string" ? metadata.comment : "";
 export const dateInput = (value?: string | null) =>
   value ? value.slice(0, 10) : "";
 export const validImage = (file: File) =>

@@ -13,6 +13,7 @@ type RelationshipsRepository interface {
 	CreateRelationship(context.Context, string, domain.CreateRelationshipInput) (domain.Relationship, error)
 	GetRelationship(context.Context, string, string) (domain.Relationship, error)
 	GetRelationships(context.Context, string, string) ([]domain.Relationship, error)
+	PatchRelationship(context.Context, string, string, domain.PatchRelationshipInput) (domain.Relationship, error)
 	DeleteRelationship(context.Context, string, string) error
 }
 

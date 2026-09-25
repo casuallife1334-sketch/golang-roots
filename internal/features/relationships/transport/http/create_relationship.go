@@ -28,10 +28,17 @@ func (h *RelationshipsHTTPHandler) CreateRelationship(w http.ResponseWriter, r *
 		corehttp.Error(w, err, "tree access is invalid")
 		return
 	}
-	var in domain.CreateRelationshipInput
-	if err := request.DecodeJSON(r, &in); err != nil {
+	var requestBody CreateRelationshipRequest
+	if err := request.DecodeJSON(r, &requestBody); err != nil {
 		corehttp.Error(w, err, "request body contains invalid JSON")
 		return
+	}
+	in := domain.CreateRelationshipInput{
+		Person1ID: requestBody.Person1ID,
+		Person2ID: requestBody.Person2ID,
+		Type:      requestBody.Type,
+		Direction: requestBody.Direction,
+		Metadata:  requestBody.Metadata,
 	}
 	rel, err := h.relationshipsService.CreateRelationship(r.Context(), userID, treeID, in)
 	if err != nil {

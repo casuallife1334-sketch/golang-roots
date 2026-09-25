@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { ImagePlus, MessageSquareText, Trash2 } from "lucide-react";
+import { ImagePlus, Trash2 } from "lucide-react";
 import { Button, Field, Modal, Notice, Select } from "../../shared/ui";
 import { useTreeCache } from "../../data/queries";
 import { dateInput, useObjectUrl, validImage } from "../../utils";
@@ -8,6 +8,7 @@ import type { Person, Tree } from "../../types";
 import { personInput, PersonSave, type PersonForm } from "./personSave";
 import { PhotoCropDialog } from "./PhotoCropDialog";
 import { PersonPortrait } from "../../shared/PersonPortrait";
+import { CommentEditor } from "./CommentEditor";
 
 export function PersonDialog({
   tree,
@@ -215,31 +216,14 @@ export function PersonDialog({
                 )}
               </div>
             </fieldset>
-            <section className="person-comment-section">
-              <div className="person-comment-heading">
-                <span className="person-comment-icon">
-                  <MessageSquareText size={17} />
-                </span>
-                <span>
-                  <strong>Комментарий</strong>
-                  <small>Воспоминания и важные сведения о человеке</small>
-                </span>
-              </div>
-              <textarea
-                className="person-comment-textarea"
-                aria-label="Комментарий"
-                placeholder="Добавьте воспоминания, биографические сведения или важные заметки о человеке…"
-                maxLength={5000}
-                disabled={mutation.isPending}
-                value={form.comment}
-                onChange={(event) =>
-                  setForm({ ...form, comment: event.target.value })
-                }
-              />
-              <span className="comment-counter" aria-live="polite">
-                {form.comment.length.toLocaleString("ru-RU")} / 5 000
-              </span>
-            </section>
+            <CommentEditor
+              className="person-comment-section"
+              value={form.comment}
+              onChange={(comment) => setForm({ ...form, comment })}
+              description="Воспоминания и важные сведения о человеке"
+              placeholder="Добавьте воспоминания, биографические сведения или важные заметки о человеке…"
+              disabled={mutation.isPending}
+            />
           </div>
           <div className="modal-actions">
             <Button

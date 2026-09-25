@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useAuth } from "../auth";
 const schema = z.object({
-  compact: z.boolean(),
   portraits: z.boolean(),
   minimap: z.boolean(),
   lineWidth: z.enum(["thin", "medium"]),
 });
 export const defaults = {
-  compact: false,
   portraits: true,
   minimap: true,
   lineWidth: "medium" as const,

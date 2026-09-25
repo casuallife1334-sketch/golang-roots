@@ -17,10 +17,14 @@ func (s *TreesService) CanWriteTree(ctx context.Context, userID, treeID string) 
 	if err != nil {
 		return err
 	}
-	if role != domain.TreeRoleOwner {
+	if !canWriteTree(role) {
 		return ErrAccessDenied
 	}
 	return nil
+}
+
+func canWriteTree(role domain.TreeRole) bool {
+	return role == domain.TreeRoleOwner || role == domain.TreeRoleEditor
 }
 
 var ErrAccessDenied = fmt.Errorf("%w: tree access denied", coreerrors.ErrForbidden)

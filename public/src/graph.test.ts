@@ -14,7 +14,14 @@ const rel = (
   a: string,
   b: string,
   type: Relationship["type"] = "parent_child",
-): Relationship => ({ id, person1_id: a, person2_id: b, type, created_at: "" });
+): Relationship => ({
+  id,
+  person1_id: a,
+  person2_id: b,
+  type,
+  metadata: {},
+  created_at: "",
+});
 const people = ["a", "b", "c", "d", "x", "y", "z", "isolated"].map(person);
 const relations = [
   rel("ab", "a", "b", "spouse"),

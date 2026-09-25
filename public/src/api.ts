@@ -1,4 +1,8 @@
-import type { PersonInput, RelationshipInput } from "./types";
+import type {
+  PatchRelationshipInput,
+  PersonInput,
+  RelationshipInput,
+} from "./types";
 import { request } from "./data/http";
 import {
   userSchema,
@@ -55,6 +59,16 @@ export const api = {
       `/trees/${treeId}/relationships`,
       relationshipSchema,
       json("POST", body),
+    ),
+  patchRelationship: (
+    treeId: string,
+    id: string,
+    body: PatchRelationshipInput,
+  ) =>
+    request(
+      `/trees/${treeId}/relationships/${id}`,
+      relationshipSchema,
+      json("PATCH", body),
     ),
   deleteRelationship: (treeId: string, id: string) =>
     request<void>(`/trees/${treeId}/relationships/${id}`, "void", {

@@ -1,21 +1,34 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Camera, Link2, Trash2, X } from "lucide-react";
+import {
+  Camera,
+  Link2,
+  SquareArrowOutUpRight,
+  Trash2,
+  X,
+} from "lucide-react";
 import { api } from "../../api";
 import type { Person, Relationship, Tree } from "../../types";
 import { useTreeCache } from "../../data/queries";
 import { usePersonPhoto } from "../../data/photos";
-import { fullName, initials, formatDate, validImage } from "../../utils";
+import {
+  fullName,
+  initials,
+  formatDate,
+  metadataComment,
+  validImage,
+} from "../../utils";
 import { Button, Modal, Notice } from "../../shared/ui";
 import { PhotoCropDialog } from "./PhotoCropDialog";
 import { parentChild } from "../../graph/model";
+import { RelationshipDetailsDialog } from "./RelationshipDetailsDialog";
 
 export function PersonPanel({
   person,
   people,
   relationships,
   tree,
-  owner,
+  editable,
   onClose,
   onEdit,
   onAddRelationship,
@@ -25,7 +38,7 @@ export function PersonPanel({
   people: Person[];
   relationships: Relationship[];
   tree: Tree;
-  owner: boolean;
+  editable: boolean;
   onClose: () => void;
   onEdit: () => void;
   onAddRelationship: () => void;
@@ -38,6 +51,8 @@ export function PersonPanel({
   const [cropFile, setCropFile] = useState<File>();
   const [error, setError] = useState("");
   const [confirm, setConfirm] = useState<string | null>(null);
+  const [commentRelationship, setCommentRelationship] =
+    useState<Relationship | null>(null);
   const remove = useMutation({
     mutationFn: (id: string) =>
       id === "person"
@@ -86,7 +101,7 @@ export function PersonPanel({
             ) : (
               <span>{initials(person)}</span>
             )}
-            {owner && (
+            {editable && (
               <>
                 <button
                   className="camera-button"
@@ -133,7 +148,7 @@ export function PersonPanel({
             </p>
             {person.metadata?.city && <p>{person.metadata.city}</p>}
             {!person.death_date && <span className="life-status">Жив(а)</span>}
-            {owner && (
+            {editable && (
               <div className="profile-actions">
                 <Button variant="secondary" onClick={onEdit}>
                   Редактировать
@@ -217,39 +232,66 @@ export function PersonPanel({
                       : item.person1_id),
                 );
                 if (!relative) return null;
+                const comment = metadataComment(item.metadata);
                 return (
-                  <div className="relation-row" key={item.id}>
-                    <button
-                      className="relation-main"
-                      onClick={() => onSelectPerson(relative)}
-                    >
-                      <span className="avatar tiny">{initials(relative)}</span>
-                      <span>{fullName(relative)}</span>
-                      <small>
-                        {item.type === "spouse"
-                          ? "Партнёр"
-                          : parentChild(item)?.parentId === person.id
-                            ? "Ребёнок"
-                            : "Родитель"}
-                      </small>
-                    </button>
-                    {owner && (
+                  <div
+                    className={`relation-row ${comment ? "has-comment" : "no-comment"}`}
+                    key={item.id}
+                  >
+                    <div className="relation-row-main">
                       <button
-                        className="relation-delete"
-                        aria-label="Удалить связь"
-                        onClick={() => {
-                          remove.reset();
-                          setConfirm(item.id);
-                        }}
+                        className="relation-main"
+                        onClick={() => onSelectPerson(relative)}
                       >
-                        <Trash2 size={14} />
+                        <span className="avatar tiny">{initials(relative)}</span>
+                        <span>{fullName(relative)}</span>
+                        <small>
+                          {item.type === "spouse"
+                            ? "Партнёр"
+                            : parentChild(item)?.parentId === person.id
+                              ? "Ребёнок"
+                              : "Родитель"}
+                        </small>
+                      </button>
+                      {(editable || comment) && (
+                        <button
+                          className="relation-comment-button"
+                          aria-label={
+                            comment
+                              ? "Открыть сведения о связи"
+                              : "Добавить сведения о связи"
+                          }
+                          onClick={() => setCommentRelationship(item)}
+                        >
+                          <SquareArrowOutUpRight size={14} />
+                        </button>
+                      )}
+                      {editable && (
+                        <button
+                          className="relation-delete"
+                          aria-label="Удалить связь"
+                          onClick={() => {
+                            remove.reset();
+                            setConfirm(item.id);
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                    {comment && (
+                      <button
+                        className="relation-comment-preview"
+                        onClick={() => setCommentRelationship(item)}
+                      >
+                        {comment}
                       </button>
                     )}
                   </div>
                 );
               })}
               {!related.length && <p>Связей пока нет.</p>}
-              {owner && (
+              {editable && (
                 <Button variant="secondary" onClick={onAddRelationship}>
                   <Link2 size={15} />
                   Добавить связь
@@ -300,6 +342,15 @@ export function PersonPanel({
             </div>
           </div>
         </Modal>
+      )}
+      {commentRelationship && (
+        <RelationshipDetailsDialog
+          tree={tree}
+          relationship={commentRelationship}
+          people={people}
+          editable={editable}
+          onClose={() => setCommentRelationship(null)}
+        />
       )}
     </>
   );

@@ -10,10 +10,10 @@ import (
 func (r *TreesRepository) GetTree(ctx context.Context, userID, treeID string) (domain.Tree, error) {
 	var tree domain.Tree
 	err := r.db.QueryRow(ctx, `
-		SELECT t.id, t.owner_id, t.name, t.created_at, t.updated_at
+		SELECT t.id, t.owner_id, tm.role, t.name, t.created_at, t.updated_at
 		FROM trees t JOIN tree_members tm ON tm.tree_id = t.id
 		WHERE t.id = $1 AND tm.user_id = $2
-	`, treeID, userID).Scan(&tree.ID, &tree.OwnerID, &tree.Name, &tree.CreatedAt, &tree.UpdatedAt)
+	`, treeID, userID).Scan(&tree.ID, &tree.OwnerID, &tree.Role, &tree.Name, &tree.CreatedAt, &tree.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return domain.Tree{}, ErrNotFound
 	}

@@ -17,5 +17,6 @@ func (r *TreesRepository) PatchTree(ctx context.Context, ownerID, treeID string,
 	if errors.Is(err, pgx.ErrNoRows) {
 		return domain.Tree{}, ErrNotFound
 	}
+	tree.Role = domain.TreeRoleOwner
 	return tree, err
 }

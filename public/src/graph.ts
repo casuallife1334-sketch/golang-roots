@@ -11,10 +11,9 @@ export type PersonGraphNode = Node<
 export function buildGraph(
   people: Person[],
   relationships: Relationship[],
-  compact = false,
 ) {
   const model = familyModel(people, relationships),
-    positions = layoutFamilies(model, compact);
+    positions = layoutFamilies(model);
   return {
     nodes: model.persons.map((person) => ({
       id: person.id,

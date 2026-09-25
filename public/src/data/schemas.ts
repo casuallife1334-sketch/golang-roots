@@ -9,6 +9,7 @@ export const userSchema = z.object({
 export const treeSchema = z.object({
   id: z.string().min(1),
   owner_id: z.string(),
+  role: z.enum(["owner", "editor", "viewer"]).optional(),
   name: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -32,7 +33,9 @@ export const relationshipSchema = z.object({
   person2_id: z.string(),
   type: z.enum(["parent_child", "spouse"]),
   direction: z.enum(["parent", "child"]).nullish(),
+  metadata: z.record(z.unknown()).default({}),
   created_at: z.string(),
+  updated_at: z.string().nullish(),
 });
 // Go list endpoints may encode an empty slice as null.
 export const listOf = <T extends z.ZodTypeAny>(schema: T) =>
