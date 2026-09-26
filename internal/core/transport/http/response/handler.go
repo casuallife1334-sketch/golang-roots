@@ -28,6 +28,8 @@ func (h *HTTPResponseHandler) ErrorResponse(err error, message string) {
 	switch {
 	case errors.Is(err, coreerrors.ErrInvalidArgument):
 		status, errorText = http.StatusBadRequest, coreerrors.ErrInvalidArgument.Error()
+	case errors.Is(err, coreerrors.ErrPayloadTooLarge):
+		status, errorText = http.StatusRequestEntityTooLarge, coreerrors.ErrPayloadTooLarge.Error()
 	case errors.Is(err, coreerrors.ErrConflict):
 		status, errorText = http.StatusConflict, coreerrors.ErrConflict.Error()
 	case errors.Is(err, coreerrors.ErrNotFound):

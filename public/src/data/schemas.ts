@@ -37,6 +37,19 @@ export const relationshipSchema = z.object({
   created_at: z.string(),
   updated_at: z.string().nullish(),
 });
+export const documentSchema = z.object({
+  id: z.string().min(1),
+  tree_id: z.string(),
+  owner: z.object({
+    type: z.enum(["person", "relationship"]),
+    id: z.string(),
+  }),
+  file_name: z.string(),
+  content_type: z.string(),
+  size_bytes: z.number(),
+  created_by: z.string(),
+  created_at: z.string(),
+});
 // Go list endpoints may encode an empty slice as null.
 export const listOf = <T extends z.ZodTypeAny>(schema: T) =>
   z

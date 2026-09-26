@@ -1,5 +1,20 @@
 basePath: /api/v1
 definitions:
+  genealogy-tree_internal_core_domain.DocumentOwner:
+    properties:
+      id:
+        type: string
+      type:
+        $ref: '#/definitions/genealogy-tree_internal_core_domain.DocumentOwnerType'
+    type: object
+  genealogy-tree_internal_core_domain.DocumentOwnerType:
+    enum:
+    - person
+    - relationship
+    type: string
+    x-enum-varnames:
+    - DocumentOwnerPerson
+    - DocumentOwnerRelationship
   genealogy-tree_internal_core_domain.Gender:
     enum:
     - male
@@ -109,6 +124,32 @@ definitions:
         type: string
       updated_at:
         example: "2026-02-26T10:30:00Z"
+        type: string
+    type: object
+  internal_features_documents_transport_http.DocumentResponse:
+    properties:
+      content_type:
+        example: application/pdf
+        type: string
+      created_at:
+        example: "2026-02-26T10:30:00Z"
+        type: string
+      created_by:
+        example: 01JQ2Q4K8Z8F6M2Z3N4P5R6S7U
+        type: string
+      file_name:
+        example: Marriage certificate.pdf
+        type: string
+      id:
+        example: 01JQ2Q4K9Y8F6M2Z3N4P5R6S7V
+        type: string
+      owner:
+        $ref: '#/definitions/genealogy-tree_internal_core_domain.DocumentOwner'
+      size_bytes:
+        example: 245760
+        type: integer
+      tree_id:
+        example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
         type: string
     type: object
   internal_features_persons_transport_http.CreatePersonRequest:
@@ -533,6 +574,159 @@ paths:
       summary: Изменение дерева
       tags:
       - trees
+  /trees/{tree_id}/documents:
+    get:
+      description: Получение документов человека или связи
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: 'Тип владельца: person или relationship'
+        in: query
+        name: owner_type
+        required: true
+        type: string
+      - description: ULID владельца документа
+        in: query
+        name: owner_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список документов
+          schema:
+            items:
+              $ref: '#/definitions/internal_features_documents_transport_http.DocumentResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Список документов
+      tags:
+      - documents
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загрузка документа к человеку или связи
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: 'Тип владельца: person или relationship'
+        in: query
+        name: owner_type
+        required: true
+        type: string
+      - description: ULID владельца документа
+        in: query
+        name: owner_id
+        required: true
+        type: string
+      - description: Документ
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Документ загружен
+          schema:
+            $ref: '#/definitions/internal_features_documents_transport_http.DocumentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Owner not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Загрузка документа
+      tags:
+      - documents
+  /trees/{tree_id}/documents/{id}:
+    delete:
+      description: Удаление документа из дерева и файлового хранилища
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: ULID документа
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Документ удалён
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Document not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удаление документа
+      tags:
+      - documents
+    get:
+      description: Получение бинарного содержимого документа
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: ULID документа
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: Документ
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "404":
+          description: Document not found
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Скачивание документа
+      tags:
+      - documents
   /trees/{tree_id}/persons:
     get:
       description: Получение списка людей в генеалогическом дереве

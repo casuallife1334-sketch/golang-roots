@@ -1,13 +1,19 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import { useAuth } from "../auth";
-import type { Person, Relationship } from "../types";
+import type { DocumentOwnerType, Person, Relationship } from "../types";
 
 export const keys = {
   trees: (user?: string) => ["trees", user] as const,
   people: (user?: string, tree?: string) => ["people", user, tree] as const,
   relationships: (user?: string, tree?: string) =>
     ["relationships", user, tree] as const,
+  documents: (
+    user?: string,
+    tree?: string,
+    ownerType?: DocumentOwnerType,
+    ownerId?: string,
+  ) => ["documents", user, tree, ownerType, ownerId] as const,
   photo: (user?: string, tree?: string, person?: string) =>
     ["photo", user, tree, person] as const,
 };
@@ -28,6 +34,17 @@ export const relationshipsQuery = (user?: string, tree?: string) =>
     queryKey: keys.relationships(user, tree),
     queryFn: ({ signal }) => api.relationships(tree!, signal),
     enabled: Boolean(user && tree),
+  });
+export const documentsQuery = (
+  user?: string,
+  tree?: string,
+  ownerType?: DocumentOwnerType,
+  ownerId?: string,
+) =>
+  queryOptions({
+    queryKey: keys.documents(user, tree, ownerType, ownerId),
+    queryFn: ({ signal }) => api.documents(tree!, ownerType!, ownerId!, signal),
+    enabled: Boolean(user && tree && ownerType && ownerId),
   });
 export function useTreeData(treeId?: string) {
   const { user } = useAuth();

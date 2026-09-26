@@ -384,6 +384,241 @@ const docTemplate = `{
                 }
             }
         },
+        "/trees/{tree_id}/documents": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Получение документов человека или связи",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Список документов",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Тип владельца: person или relationship",
+                        "name": "owner_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ULID владельца документа",
+                        "name": "owner_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список документов",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_features_documents_transport_http.DocumentResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Загрузка документа к человеку или связи",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Загрузка документа",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Тип владельца: person или relationship",
+                        "name": "owner_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ULID владельца документа",
+                        "name": "owner_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Документ",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Документ загружен",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_documents_transport_http.DocumentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Owner not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "Payload Too Large",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/trees/{tree_id}/documents/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Получение бинарного содержимого документа",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Скачивание документа",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ULID документа",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Документ",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Document not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Удаление документа из дерева и файлового хранилища",
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Удаление документа",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ULID документа",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Документ удалён"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Document not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/trees/{tree_id}/persons": {
             "get": {
                 "security": [
@@ -1181,6 +1416,28 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "genealogy-tree_internal_core_domain.DocumentOwner": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/genealogy-tree_internal_core_domain.DocumentOwnerType"
+                }
+            }
+        },
+        "genealogy-tree_internal_core_domain.DocumentOwnerType": {
+            "type": "string",
+            "enum": [
+                "person",
+                "relationship"
+            ],
+            "x-enum-varnames": [
+                "DocumentOwnerPerson",
+                "DocumentOwnerRelationship"
+            ]
+        },
         "genealogy-tree_internal_core_domain.Gender": {
             "type": "string",
             "enum": [
@@ -1334,6 +1591,42 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2026-02-26T10:30:00Z"
+                }
+            }
+        },
+        "internal_features_documents_transport_http.DocumentResponse": {
+            "type": "object",
+            "properties": {
+                "content_type": {
+                    "type": "string",
+                    "example": "application/pdf"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-02-26T10:30:00Z"
+                },
+                "created_by": {
+                    "type": "string",
+                    "example": "01JQ2Q4K8Z8F6M2Z3N4P5R6S7U"
+                },
+                "file_name": {
+                    "type": "string",
+                    "example": "Marriage certificate.pdf"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K9Y8F6M2Z3N4P5R6S7V"
+                },
+                "owner": {
+                    "$ref": "#/definitions/genealogy-tree_internal_core_domain.DocumentOwner"
+                },
+                "size_bytes": {
+                    "type": "integer",
+                    "example": 245760
+                },
+                "tree_id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K7Y8F6M2Z3N4P5R6S7T"
                 }
             }
         },

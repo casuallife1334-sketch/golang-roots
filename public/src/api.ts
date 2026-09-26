@@ -2,6 +2,7 @@ import type {
   PatchRelationshipInput,
   PersonInput,
   RelationshipInput,
+  DocumentOwnerType,
 } from "./types";
 import { request } from "./data/http";
 import {
@@ -9,6 +10,7 @@ import {
   treeSchema,
   personSchema,
   relationshipSchema,
+  documentSchema,
   loginSchema,
   listOf,
 } from "./data/schemas";
@@ -72,6 +74,37 @@ export const api = {
     ),
   deleteRelationship: (treeId: string, id: string) =>
     request<void>(`/trees/${treeId}/relationships/${id}`, "void", {
+      method: "DELETE",
+    }),
+  documents: (
+    treeId: string,
+    ownerType: DocumentOwnerType,
+    ownerId: string,
+    signal?: AbortSignal,
+  ) =>
+    request(
+      `/trees/${treeId}/documents?owner_type=${ownerType}&owner_id=${ownerId}`,
+      listOf(documentSchema),
+      { signal },
+    ),
+  uploadDocument: (
+    treeId: string,
+    ownerType: DocumentOwnerType,
+    ownerId: string,
+    file: File,
+  ) => {
+    const body = new FormData();
+    body.append("file", file);
+    return request(
+      `/trees/${treeId}/documents?owner_type=${ownerType}&owner_id=${ownerId}`,
+      documentSchema,
+      { method: "POST", body },
+    );
+  },
+  downloadDocument: (treeId: string, id: string) =>
+    request<Blob>(`/trees/${treeId}/documents/${id}`, "file"),
+  deleteDocument: (treeId: string, id: string) =>
+    request<void>(`/trees/${treeId}/documents/${id}`, "void", {
       method: "DELETE",
     }),
   photo: (treeId: string, id: string, signal?: AbortSignal) =>
