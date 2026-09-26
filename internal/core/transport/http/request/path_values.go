@@ -28,3 +28,14 @@ func GetOptionalULIDQueryValue(r *http.Request, key string) (string, error) {
 	}
 	return value, nil
 }
+
+func GetULIDQueryValue(r *http.Request, key string) (string, error) {
+	value := r.URL.Query().Get(key)
+	if value == "" {
+		return "", fmt.Errorf("query value %q is empty: %w", key, coreerrors.ErrInvalidArgument)
+	}
+	if _, err := ulid.Parse(value); err != nil {
+		return "", fmt.Errorf("query value %q is not a valid ULID: %w", key, coreerrors.ErrInvalidArgument)
+	}
+	return value, nil
+}

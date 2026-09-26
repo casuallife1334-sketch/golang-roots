@@ -1,6 +1,7 @@
 export type Gender = "male" | "female" | "other";
 export type RelationshipType = "parent_child" | "spouse";
 export type RelationshipDirection = "parent" | "child";
+export type DocumentOwnerType = "person" | "relationship";
 
 export interface User {
   id: string;
@@ -57,6 +58,20 @@ export interface RelationshipInput {
 }
 export interface PatchRelationshipInput {
   metadata?: Record<string, unknown>;
+}
+export interface DocumentOwner {
+  type: DocumentOwnerType;
+  id: string;
+}
+export interface Document {
+  id: string;
+  tree_id: string;
+  owner: DocumentOwner;
+  file_name: string;
+  content_type: string;
+  size_bytes: number;
+  created_by: string;
+  created_at: string;
 }
 
 export const EMPTY_ARRAY = <T>(value: T[] | null | undefined): T[] =>

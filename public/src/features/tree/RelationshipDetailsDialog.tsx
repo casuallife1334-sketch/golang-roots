@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { FileText } from "lucide-react";
 import { api } from "../../api";
 import { useTreeCache } from "../../data/queries";
 import { parentChild } from "../../graph/model";
@@ -8,6 +7,7 @@ import { Button, Modal, Notice } from "../../shared/ui";
 import type { Person, Relationship, Tree } from "../../types";
 import { fullName, metadataComment } from "../../utils";
 import { CommentEditor } from "./CommentEditor";
+import { DocumentsSection } from "./DocumentsSection";
 
 export function RelationshipDetailsDialog({
   tree,
@@ -77,20 +77,12 @@ export function RelationshipDetailsDialog({
           disabled={mutation.isPending}
           editable={editable}
         />
-        <section className="relationship-documents-panel">
-          <div className="comment-editor-heading">
-            <span className="comment-editor-icon">
-              <FileText size={17} />
-            </span>
-            <span>
-              <strong>Документы</strong>
-              <small>Материалы, связанные с этой связью</small>
-            </span>
-          </div>
-          <div className="relationship-documents-empty">
-            Возможность добавлять документы скоро появится
-          </div>
-        </section>
+        <DocumentsSection
+          treeId={tree.id}
+          ownerType="relationship"
+          ownerId={relationship.id}
+          editable={editable}
+        />
       </div>
       <div className="modal-actions">
         <Button

@@ -48,7 +48,7 @@ async function validatedImageBlob(response: Response) {
 }
 export async function request<T>(
   path: string,
-  schema: z.ZodType<T, z.ZodTypeDef, unknown> | "blob" | "void",
+  schema: z.ZodType<T, z.ZodTypeDef, unknown> | "blob" | "file" | "void",
   init: RequestInit = {},
   anonymous = false,
 ): Promise<T> {
@@ -110,6 +110,7 @@ export async function request<T>(
     if (schema === "blob") {
       return (await validatedImageBlob(response)) as T;
     }
+    if (schema === "file") return (await response.blob()) as T;
     const parsed = schema.safeParse(
       await response.json().catch(() => undefined),
     );

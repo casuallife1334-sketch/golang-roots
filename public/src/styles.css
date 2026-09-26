@@ -1919,6 +1919,91 @@ button:focus-visible {
 .relationship-documents-panel .comment-editor-heading {
   min-height: 25px;
 }
+.documents-section {
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+.relationship-details-layout > .documents-section {
+  min-height: 420px;
+  align-content: start;
+}
+.documents-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.documents-section-head .button {
+  flex: none;
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.documents-section-head .comment-editor-heading {
+  min-width: 0;
+}
+.documents-empty {
+  margin: 0;
+  padding: 28px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+.documents-list {
+  display: grid;
+  gap: 8px;
+}
+.document-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted);
+}
+.document-info {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 3px;
+}
+.document-info strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.document-info small {
+  font-size: 10px;
+}
+.document-action {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+}
+.document-action:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.document-action.danger:hover:not(:disabled) {
+  background: #fff3f1;
+  color: #a54747;
+}
 .relationship-documents-empty {
   min-height: 0;
   flex: 1;
@@ -1981,6 +2066,9 @@ button:focus-visible {
   }
   .relationship-comment-editor,
   .relationship-documents-panel {
+    min-height: 320px;
+  }
+  .relationship-details-layout > .documents-section {
     min-height: 320px;
   }
   .relationship-documents-empty {

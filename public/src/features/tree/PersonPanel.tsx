@@ -22,6 +22,7 @@ import { Button, Modal, Notice } from "../../shared/ui";
 import { PhotoCropDialog } from "./PhotoCropDialog";
 import { parentChild } from "../../graph/model";
 import { RelationshipDetailsDialog } from "./RelationshipDetailsDialog";
+import { DocumentsSection } from "./DocumentsSection";
 
 export function PersonPanel({
   person,
@@ -182,6 +183,12 @@ export function PersonPanel({
           >
             Родственники
           </button>
+          <button
+            className={tab === "documents" ? "active" : ""}
+            onClick={() => setTab("documents")}
+          >
+            Документы
+          </button>
         </div>
         <div className="detail-scroll">
           {tab === "overview" ? (
@@ -220,7 +227,7 @@ export function PersonPanel({
                 </>
               )}
             </>
-          ) : (
+          ) : tab === "relations" ? (
             <>
               <h3>Связи человека</h3>
               {related.map((item) => {
@@ -298,6 +305,13 @@ export function PersonPanel({
                 </Button>
               )}
             </>
+          ) : (
+            <DocumentsSection
+              treeId={tree.id}
+              ownerType="person"
+              ownerId={person.id}
+              editable={editable}
+            />
           )}
         </div>
       </aside>

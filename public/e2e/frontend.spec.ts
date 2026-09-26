@@ -71,6 +71,18 @@ async function fixture(
   page.on("pageerror", (error) => errors.push(error.message));
   let people = structuredClone(initial);
   let relations = structuredClone(relationships);
+  let documents = [
+    {
+      id: "document-xz",
+      tree_id: tree.id,
+      owner: { type: "relationship", id: "xz" },
+      file_name: "Семейный архив.pdf",
+      content_type: "application/pdf",
+      size_bytes: 245760,
+      created_by: user.id,
+      created_at: date,
+    },
+  ];
   let creates = 0;
   let photoFailures = photoFailuresBeforeSuccess;
   await page.addInitScript(() =>
@@ -95,6 +107,45 @@ async function fixture(
           role,
         },
       ]);
+    if (path.includes("/documents")) {
+      const documentId = path.split("/").at(-1)!;
+      if (method === "GET" && documentId !== "documents") {
+        return route.fulfill({
+          status: 200,
+          contentType: "application/pdf",
+          body: Buffer.from("document"),
+        });
+      }
+      if (method === "GET") {
+        const url = new URL(route.request().url());
+        const ownerType = url.searchParams.get("owner_type");
+        const ownerId = url.searchParams.get("owner_id");
+        return json(
+          documents.filter(
+            (item) =>
+              item.owner.type === ownerType && item.owner.id === ownerId,
+          ),
+        );
+      }
+      if (method === "POST") {
+        const url = new URL(route.request().url());
+        const saved = {
+          ...documents[0],
+          id: `document-${documents.length + 1}`,
+          owner: {
+            type: url.searchParams.get("owner_type")!,
+            id: url.searchParams.get("owner_id")!,
+          },
+          file_name: "Новый документ.pdf",
+        };
+        documents.push(saved);
+        return json(saved, 201);
+      }
+      if (method === "DELETE") {
+        documents = documents.filter((item) => item.id !== documentId);
+        return route.fulfill({ status: 204, body: "" });
+      }
+    }
     if (path.endsWith("/relationships")) {
       if (method === "POST") {
         const saved = {
@@ -417,7 +468,7 @@ test("relationship comment is edited, cleared and keeps other metadata", async (
   await page
     .locator(".relation-comment-preview", { hasText: "Вместе переехали" })
     .click();
-  await expect(page.getByText("Возможность добавлять документы скоро появится")).toBeVisible();
+  await expect(page.getByText("Семейный архив.pdf")).toBeVisible();
   const textarea = page.getByLabel("Комментарий", { exact: true });
   await textarea.fill("Обновлённый комментарий");
   await page.getByRole("button", { name: "Сохранить", exact: true }).click();
@@ -452,7 +503,7 @@ test("viewer can read but cannot edit a relationship comment", async ({
   await page
     .locator(".relation-comment-preview", { hasText: "Вместе переехали" })
     .click();
-  await expect(page.getByText("Возможность добавлять документы скоро появится")).toBeVisible();
+  await expect(page.getByText("Семейный архив.pdf")).toBeVisible();
   await expect(page.getByRole("dialog")).toContainText(
     "Вместе переехали во Владивосток",
   );
@@ -483,6 +534,22 @@ test("editor can update a relationship comment", async ({ page }) => {
       hasText: "Комментарий редактора",
     }),
   ).toBeVisible();
+  expect(state.errors).toEqual([]);
+});
+test("person documents are shown in a separate tab and can be uploaded", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  await page.goto("/trees/tree?person=childA");
+  await page.getByRole("button", { name: "Документы", exact: true }).click();
+  await expect(page.getByText("Документы пока не добавлены")).toBeVisible();
+  await page.locator(".documents-section input[type=\"file\"]").setInputFiles({
+    name: "birth-certificate.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("pdf"),
+  });
+  await expect(page.getByText("Новый документ.pdf")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Скачать Новый документ/ })).toBeVisible();
   expect(state.errors).toEqual([]);
 });
 test("comment editor is responsive, limited and scrolls without a visible bar", async ({

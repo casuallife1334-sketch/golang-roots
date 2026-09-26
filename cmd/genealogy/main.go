@@ -15,6 +15,9 @@ import (
 	httpserver "genealogy-tree/internal/core/transport/http/server"
 	authservice "genealogy-tree/internal/features/auth/service"
 	authhttp "genealogy-tree/internal/features/auth/transport/http"
+	docrepo "genealogy-tree/internal/features/documents/repository"
+	docservice "genealogy-tree/internal/features/documents/service"
+	dochttp "genealogy-tree/internal/features/documents/transport/http"
 	personrepo "genealogy-tree/internal/features/persons/repository"
 	personminio "genealogy-tree/internal/features/persons/repository/minio"
 	personservice "genealogy-tree/internal/features/persons/service"
@@ -101,6 +104,12 @@ func main() {
 	relationshipsService := relservice.NewRelationshipsService(relationshipsRepository, treesService)
 	relationshipsTransportHTTP := relhttp.NewRelationshipsHTTPHandlers(relationshipsService)
 
+	logger.Debug("initializing feature", zap.String("feature", "documents"))
+
+	documentsRepository := docrepo.NewDocumentsRepository(pool)
+	documentsService := docservice.NewDocumentsService(documentsRepository, fileStorage, treesService)
+	documentsTransportHTTP := dochttp.NewDocumentsHTTPHandler(documentsService)
+
 	httpConfig := httpserver.NewConfigMust()
 	server := httpserver.NewHTTPServer(
 		httpConfig,
@@ -120,6 +129,7 @@ func main() {
 		treesTransportHTTP.Routes(),
 		personsTransportHTTP.Routes(),
 		relationshipsTransportHTTP.Routes(),
+		documentsTransportHTTP.Routes(),
 	}
 	for _, routes := range protectedRoutes {
 		for _, route := range routes {
