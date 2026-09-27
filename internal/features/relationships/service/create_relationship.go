@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"genealogy-tree/internal/core/domain"
-	"github.com/oklog/ulid/v2"
+	"genealogy-tree/internal/core/validation"
 )
 
 func (s *RelationshipsService) CreateRelationship(ctx context.Context, userID, treeID string, in domain.CreateRelationshipInput) (domain.Relationship, error) {
@@ -12,10 +12,10 @@ func (s *RelationshipsService) CreateRelationship(ctx context.Context, userID, t
 		return domain.Relationship{}, err
 	}
 	in.Metadata = metadata
-	if _, err := ulid.Parse(in.Person1ID); err != nil {
+	if err := validation.ValidateULID(in.Person1ID); err != nil {
 		return domain.Relationship{}, ErrInvalid
 	}
-	if _, err := ulid.Parse(in.Person2ID); err != nil || in.Person1ID == in.Person2ID {
+	if err := validation.ValidateULID(in.Person2ID); err != nil || in.Person1ID == in.Person2ID {
 		return domain.Relationship{}, ErrInvalid
 	}
 	if in.Type != domain.RelationshipParentChild && in.Type != domain.RelationshipSpouse {

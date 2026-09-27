@@ -3,11 +3,11 @@ package security
 import (
 	"errors"
 	"fmt"
+	"genealogy-tree/internal/core/validation"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/oklog/ulid/v2"
 )
 
 var ErrInvalidToken = errors.New("invalid access token")
@@ -54,7 +54,7 @@ func (m *TokenManager) ParseAccessToken(tokenString string) (string, error) {
 	if !ok || claims.Subject == "" {
 		return "", ErrInvalidToken
 	}
-	if _, err := ulid.Parse(claims.Subject); err != nil {
+	if err := validation.ValidateULID(claims.Subject); err != nil {
 		return "", ErrInvalidToken
 	}
 	return claims.Subject, nil

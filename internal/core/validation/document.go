@@ -2,7 +2,6 @@ package validation
 
 import (
 	"errors"
-	"github.com/oklog/ulid/v2"
 	"strings"
 	"unicode/utf8"
 )
@@ -35,7 +34,7 @@ func ValidateDocumentOwnerID(value string) error {
 	if strings.TrimSpace(value) == "" || utf8.RuneCountInString(value) != 26 {
 		return ErrInvalidDocumentOwner
 	}
-	if _, err := ulid.Parse(value); err != nil {
+	if err := ValidateULID(value); err != nil {
 		return ErrInvalidDocumentOwner
 	}
 	return nil

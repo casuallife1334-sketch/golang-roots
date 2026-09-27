@@ -10,8 +10,10 @@ func (s *PersonsService) PatchPerson(ctx context.Context, userID, treeID, id str
 	if input.FirstName != nil && strings.TrimSpace(*input.FirstName) == "" || input.LastName != nil && strings.TrimSpace(*input.LastName) == "" {
 		return domain.Person{}, ErrInvalid
 	}
-	if input.BirthDate != nil && input.DeathDate != nil && *input.BirthDate != nil && *input.DeathDate != nil && (*input.DeathDate).Before(**input.BirthDate) {
-		return domain.Person{}, ErrInvalid
+	if input.BirthDate != nil && input.DeathDate != nil {
+		if err := validatePersonDates(*input.BirthDate, *input.DeathDate); err != nil {
+			return domain.Person{}, err
+		}
 	}
 	if input.Patronymic.Set {
 		patronymic, err := normalizePatronymic(input.Patronymic.Value)
