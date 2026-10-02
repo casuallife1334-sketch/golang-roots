@@ -11,6 +11,7 @@ import (
 	corelogger "genealogy-tree/internal/core/logger"
 	"genealogy-tree/internal/core/repository/postgres"
 	"genealogy-tree/internal/core/security"
+	miniostorage "genealogy-tree/internal/core/storage/minio"
 	"genealogy-tree/internal/core/transport/http/middleware"
 	httpserver "genealogy-tree/internal/core/transport/http/server"
 	authservice "genealogy-tree/internal/features/auth/service"
@@ -19,7 +20,6 @@ import (
 	docservice "genealogy-tree/internal/features/documents/service"
 	dochttp "genealogy-tree/internal/features/documents/transport/http"
 	personrepo "genealogy-tree/internal/features/persons/repository"
-	personminio "genealogy-tree/internal/features/persons/repository/minio"
 	personservice "genealogy-tree/internal/features/persons/service"
 	personhttp "genealogy-tree/internal/features/persons/transport/http"
 	relrepo "genealogy-tree/internal/features/relationships/repository"
@@ -77,7 +77,7 @@ func main() {
 	usersTransportHTTP := usershttp.NewUsersHTTPHandler(usersService)
 	logger.Debug("initializing minio S3-storage")
 
-	fileStorage, err := personminio.NewMinIOFileStorage(
+	fileStorage, err := miniostorage.NewMinIOFileStorage(
 		cfg.MinIOEndpoint,
 		cfg.MinIOAccessKey,
 		cfg.MinIOSecretKey,
