@@ -6,7 +6,7 @@ export
 export PROJECT_ROOT := $(shell pwd)
 
 env-up:
-	@docker compose up -d --wait postgres minio
+	@docker compose up -d --wait postgres seaweedfs
 
 docker-up:
 	@docker compose up -d --build genealogy frontend
@@ -29,7 +29,7 @@ env-cleanup:
 	@read -p "Очистить все volumes окружения? ОПАСНОСТЬ УТЕРИ ДАННЫХ. [y/N]: " ans; \
 	if [ "$$ans" = "y" ]; then \
 		docker compose down -v && \
-		rm -rf "$(PROJECT_ROOT)/out/pgdata" "$(PROJECT_ROOT)/out/minio" && \
+		rm -rf "$(PROJECT_ROOT)/out/pgdata" "$(PROJECT_ROOT)/out/seaweedfs" && \
 		echo "Файлы окружения очищены"; \
 	else \
 		echo "Очистка окружения отменена"; \

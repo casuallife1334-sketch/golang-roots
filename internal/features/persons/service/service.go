@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"genealogy-tree/internal/core/domain"
 	coreerrors "genealogy-tree/internal/core/errors"
-	"genealogy-tree/internal/core/storage"
+	"io"
 )
 
 var ErrInvalid = fmt.Errorf("%w: invalid person input", coreerrors.ErrInvalidArgument)
@@ -24,12 +24,18 @@ type TreeAccess interface {
 	CanWriteTree(context.Context, string, string) error
 }
 
+type PhotoStorage interface {
+	Put(context.Context, string, io.Reader, string) (string, error)
+	Get(context.Context, string) (io.ReadCloser, error)
+	Delete(context.Context, string) error
+}
+
 type PersonsService struct {
 	personsRepository PersonsRepository
-	fileStorage       storage.FileStorage
+	fileStorage       PhotoStorage
 	treeAccess        TreeAccess
 }
 
-func NewPersonsService(personsRepository PersonsRepository, fileStorage storage.FileStorage, treeAccess TreeAccess) *PersonsService {
+func NewPersonsService(personsRepository PersonsRepository, fileStorage PhotoStorage, treeAccess TreeAccess) *PersonsService {
 	return &PersonsService{personsRepository: personsRepository, fileStorage: fileStorage, treeAccess: treeAccess}
 }
