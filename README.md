@@ -15,7 +15,7 @@ make run
 ## Запуск в Docker
 
 Сборка приложения выполняется multi-stage Dockerfile из `cmd/genealogy/Dockerfile`.
-Для запуска PostgreSQL, MinIO, миграций и API в контейнерах:
+Для запуска PostgreSQL, SeaweedFS, миграций и API в контейнерах:
 
 ```sh
 cp .env.example .env
@@ -28,7 +28,7 @@ Frontend будет доступен по адресу `http://localhost:5173`, 
 make docker-down
 ```
 
-Внутри Docker приложение подключается к PostgreSQL по имени сервиса `postgres`, а к MinIO по имени `minio`. Логи приложения сохраняются в `out/logs`.
+Внутри Docker приложение подключается к PostgreSQL по имени сервиса `postgres`, а к S3 API SeaweedFS по имени `seaweedfs`. Логи приложения сохраняются в `out/logs`.
 
 ## Авторизация
 
@@ -60,23 +60,25 @@ make swagger-gen
 
 Для полного удаления контейнеров и volumes окружения используй `make env-cleanup` и подтверди операцию символом `y`.
 
-## MinIO и фотографии
+## SeaweedFS и фотографии
 
-Локальный MinIO запускается вместе с PostgreSQL:
+Локальный SeaweedFS запускается вместе с PostgreSQL:
 
 ```sh
 make env-up
 ```
 
-Адреса локального MinIO:
+Backend использует AWS SDK for Go v2 как S3-клиент и подключается к SeaweedFS через его S3 API. Поэтому код приложения не зависит от внутреннего формата хранения SeaweedFS и в будущем может подключиться к AWS S3, Cloudflare R2 или другому S3-compatible сервису.
 
-- S3 API: `http://localhost:9000`
-- Web Console: `http://localhost:9001`
-- Логин: значение `MINIO_ACCESS_KEY` из `.env`
-- Пароль: значение `MINIO_SECRET_KEY` из `.env`
-- Bucket: значение `MINIO_BUCKET` из `.env`
+Адреса локального SeaweedFS:
 
-При запуске приложения bucket создаётся автоматически, если его ещё нет. Файлы хранятся локально в `out/minio`, поэтому удаление контейнера не удаляет фотографии. Полная очистка через `make env-cleanup` удаляет и этот каталог.
+- S3 API: `http://localhost:8333`
+- Admin UI: `http://localhost:23646`
+- Логин: значение `S3_ACCESS_KEY` из `.env`
+- Пароль: значение `S3_SECRET_KEY` из `.env`
+- Bucket: значение `S3_BUCKET` из `.env`
+
+SeaweedFS создаёт bucket при первом запуске, если он указан в `S3_BUCKET`. Приложение также проверяет наличие bucket при старте. Файлы хранятся локально в `out/seaweedfs`, поэтому удаление контейнера не удаляет фотографии. Полная очистка через `make env-cleanup` удаляет и этот каталог.
 
 ### Загрузка фотографии
 
@@ -96,7 +98,7 @@ curl -X POST http://localhost:8080/api/v1/trees/{tree_id}/persons/{id}/photo \
   -F "file=@/path/to/photo.jpg"
 ```
 
-После успешной загрузки в поле `photo_url` person сохраняется ключ объекта MinIO, например `persons/{id}/photo`.
+После успешной загрузки в поле `photo_url` person сохраняется S3 object key, например `persons/{id}/photo`.
 
 ### Получение фотографии
 
@@ -112,9 +114,9 @@ GET /api/v1/trees/{tree_id}/persons/{id}/photo
 DELETE /api/v1/trees/{tree_id}/persons/{id}/photo
 ```
 
-Тело запроса не требуется. Объект удаляется из MinIO, а `photo_url` person очищается.
+Тело запроса не требуется. Объект удаляется из S3-хранилища, а `photo_url` person очищается.
 
-Повторная загрузка фотографии заменяет старый файл и удаляет прежний объект из MinIO.
+Повторная загрузка фотографии заменяет старый файл и удаляет прежний объект из S3-хранилища.
 
 Все идентификаторы в API имеют формат ULID, например `01JQ2Q4K7Y8F6M2Z3N4P5R6S7T`.
 

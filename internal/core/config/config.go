@@ -17,11 +17,11 @@ type Config struct {
 	DatabaseUser        string
 	DatabasePassword    string
 	DatabaseName        string
-	MinIOEndpoint       string
-	MinIOAccessKey      string
-	MinIOSecretKey      string
-	MinIOBucket         string
-	MinIOUseSSL         bool
+	S3Endpoint          string
+	S3AccessKey         string
+	S3SecretKey         string
+	S3Bucket            string
+	S3UseSSL            bool
 	JWTSecret           string
 	JWTIssuer           string
 	JWTAccessTTL        time.Duration
@@ -36,11 +36,11 @@ func Load() (Config, error) {
 		DatabaseUser:     env("POSTGRES_USER", "postgres"),
 		DatabasePassword: env("POSTGRES_PASSWORD", "postgres"),
 		DatabaseName:     env("POSTGRES_DB", "genealogy"),
-		MinIOEndpoint:    env("MINIO_ENDPOINT", "localhost:9000"),
-		MinIOAccessKey:   env("MINIO_ACCESS_KEY", "minioadmin"),
-		MinIOSecretKey:   env("MINIO_SECRET_KEY", "minioadmin"),
-		MinIOBucket:      env("MINIO_BUCKET", "genealogy"),
-		MinIOUseSSL:      boolEnv("MINIO_USE_SSL", false),
+		S3Endpoint:       env("S3_ENDPOINT", "localhost:8333"),
+		S3AccessKey:      env("S3_ACCESS_KEY", "s3admin"),
+		S3SecretKey:      env("S3_SECRET_KEY", "s3secret"),
+		S3Bucket:         env("S3_BUCKET", "genealogy"),
+		S3UseSSL:         boolEnv("S3_USE_SSL", false),
 		JWTSecret:        os.Getenv("JWT_SECRET"),
 		JWTIssuer:        env("JWT_ISSUER", "genealogy-tree"),
 		JWTAccessTTL:     durationEnv("JWT_ACCESS_TTL", 15*time.Minute),

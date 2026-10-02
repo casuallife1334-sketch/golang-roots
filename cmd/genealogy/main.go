@@ -11,7 +11,7 @@ import (
 	corelogger "genealogy-tree/internal/core/logger"
 	"genealogy-tree/internal/core/repository/postgres"
 	"genealogy-tree/internal/core/security"
-	miniostorage "genealogy-tree/internal/core/storage/minio"
+	s3storage "genealogy-tree/internal/core/storage/s3"
 	"genealogy-tree/internal/core/transport/http/middleware"
 	httpserver "genealogy-tree/internal/core/transport/http/server"
 	authservice "genealogy-tree/internal/features/auth/service"
@@ -70,23 +70,31 @@ func main() {
 		logger.Fatal("failed to init token manager", zap.Error(err))
 	}
 
+	logger.Debug("initializing feature", zap.String("feature", "users"))
+
 	usersRepository := usersrepo.NewUsersRepository(pool)
 	usersService := usersservice.NewUsersService(usersRepository)
+	usersTransportHTTP := usershttp.NewUsersHTTPHandler(usersService)
+
+	logger.Debug("initializing feature", zap.String("feature", "auth"))
+
 	authService := authservice.NewAuthService(usersRepository, tokenManager)
 	authTransportHTTP := authhttp.NewAuthHTTPHandler(authService)
-	usersTransportHTTP := usershttp.NewUsersHTTPHandler(usersService)
-	logger.Debug("initializing minio S3-storage")
 
-	fileStorage, err := miniostorage.NewMinIOFileStorage(
-		cfg.MinIOEndpoint,
-		cfg.MinIOAccessKey,
-		cfg.MinIOSecretKey,
-		cfg.MinIOBucket,
-		cfg.MinIOUseSSL,
+	logger.Debug("initializing S3 file storage")
+
+	fileStorage, err := s3storage.NewS3FileStorage(
+		cfg.S3Endpoint,
+		cfg.S3AccessKey,
+		cfg.S3SecretKey,
+		cfg.S3Bucket,
+		cfg.S3UseSSL,
 	)
 	if err != nil {
-		logger.Fatal("failed to init MinIO file storage", zap.Error(err))
+		logger.Fatal("failed to init S3 file storage", zap.Error(err))
 	}
+
+	logger.Debug("initializing feature", zap.String("feature", "trees"))
 
 	treesRepository := treerepo.NewTreesRepository(pool)
 	treesService := treeservice.NewTreesService(treesRepository, fileStorage)

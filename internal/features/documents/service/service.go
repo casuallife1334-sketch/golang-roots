@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"genealogy-tree/internal/core/domain"
 	coreerrors "genealogy-tree/internal/core/errors"
-	"genealogy-tree/internal/core/storage"
 	"io"
 )
 
@@ -26,13 +25,19 @@ type TreeAccess interface {
 	CanWriteTree(context.Context, string, string) error
 }
 
+type DocumentStorage interface {
+	Put(context.Context, string, io.Reader, string) (string, error)
+	Get(context.Context, string) (io.ReadCloser, error)
+	Delete(context.Context, string) error
+}
+
 type DocumentsService struct {
 	documentsRepository DocumentsRepository
-	fileStorage         storage.FileStorage
+	fileStorage         DocumentStorage
 	treeAccess          TreeAccess
 }
 
-func NewDocumentsService(documentsRepository DocumentsRepository, fileStorage storage.FileStorage, treeAccess TreeAccess) *DocumentsService {
+func NewDocumentsService(documentsRepository DocumentsRepository, fileStorage DocumentStorage, treeAccess TreeAccess) *DocumentsService {
 	return &DocumentsService{
 		documentsRepository: documentsRepository,
 		fileStorage:         fileStorage,

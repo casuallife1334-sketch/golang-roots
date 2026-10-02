@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"genealogy-tree/internal/core/domain"
 	coreerrors "genealogy-tree/internal/core/errors"
-	"genealogy-tree/internal/core/storage"
 )
 
 var ErrInvalid = fmt.Errorf("%w: invalid tree input", coreerrors.ErrInvalidArgument)
@@ -20,11 +19,15 @@ type TreesRepository interface {
 	GetPhotoURLs(context.Context, string) ([]string, error)
 }
 
-type TreesService struct {
-	treesRepository TreesRepository
-	fileStorage     storage.FileStorage
+type FileDeleter interface {
+	Delete(context.Context, string) error
 }
 
-func NewTreesService(treesRepository TreesRepository, fileStorage storage.FileStorage) *TreesService {
+type TreesService struct {
+	treesRepository TreesRepository
+	fileStorage     FileDeleter
+}
+
+func NewTreesService(treesRepository TreesRepository, fileStorage FileDeleter) *TreesService {
 	return &TreesService{treesRepository: treesRepository, fileStorage: fileStorage}
 }
