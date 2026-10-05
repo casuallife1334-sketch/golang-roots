@@ -1,5 +1,12 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { GitBranch, LogOut, Settings, UsersRound, Leaf } from "lucide-react";
+import {
+  ContactRound,
+  GitBranch,
+  Leaf,
+  LogOut,
+  Settings,
+  UsersRound,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { treeQuery } from "../data/queries";
 import { useAuth } from "../auth";
@@ -21,6 +28,9 @@ export function Shell() {
   const treeHref = activeTreeId ? `/trees/${activeTreeId}` : "/trees";
   const familiesHref = activeTreeId
     ? `/trees/${activeTreeId}/families`
+    : "/trees";
+  const personsHref = activeTreeId
+    ? `/trees/${activeTreeId}/persons`
     : "/trees";
   const initials = user?.email.slice(0, 2).toUpperCase() || "R";
   return (
@@ -53,6 +63,16 @@ export function Shell() {
           >
             <UsersRound size={19} />
             Семьи
+          </NavLink>
+          <NavLink
+            to={personsHref}
+            end
+            className={() =>
+              `nav-item ${location.pathname === personsHref ? "active" : ""}`
+            }
+          >
+            <ContactRound size={19} />
+            Персоны
           </NavLink>
           <NavLink
             to="/settings"
