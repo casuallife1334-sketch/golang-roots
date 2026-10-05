@@ -11,6 +11,11 @@ const FamiliesPage = lazy(() =>
     default: module.FamiliesPage,
   })),
 );
+const PersonsPage = lazy(() =>
+  import("../pages/PersonsPage").then((module) => ({
+    default: module.PersonsPage,
+  })),
+);
 const SettingsPage = lazy(() =>
   import("../pages/SettingsPage").then((module) => ({
     default: module.SettingsPage,
@@ -65,6 +70,7 @@ export function App() {
           <Route path="/trees" element={<TreePage />} />
           <Route path="/trees/:treeId" element={<TreePage />} />
           <Route path="/trees/:treeId/families" element={<FamiliesPage />} />
+          <Route path="/trees/:treeId/persons" element={<PersonsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

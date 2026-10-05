@@ -616,6 +616,52 @@ button:focus-visible {
   gap: 7px;
   margin-left: auto;
 }
+.persons-table-wrap {
+  overflow-x: auto;
+  padding: 0 28px 28px;
+}
+.persons-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.persons-table th,
+.persons-table td {
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+.persons-table th {
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.persons-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.persons-table tbody tr:hover {
+  background: #fcfdff;
+}
+.persons-table-name {
+  padding: 0;
+  background: none;
+  color: var(--text);
+  font-weight: 600;
+  text-align: left;
+}
+.persons-table-name:hover {
+  color: var(--accent);
+}
 .family-controls .select-wrap {
   min-width: 140px;
 }
@@ -1146,7 +1192,8 @@ button:focus-visible {
     box-shadow: 0 12px 30px #1112;
   }
   .family-grid,
-  .settings-grid {
+  .settings-grid,
+  .persons-table-wrap {
     padding-left: 16px;
     padding-right: 16px;
   }
