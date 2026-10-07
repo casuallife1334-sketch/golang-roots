@@ -6,6 +6,7 @@ import (
 	coreerrors "genealogy-tree/internal/core/errors"
 	"genealogy-tree/internal/core/transport/http/request"
 	corehttp "genealogy-tree/internal/core/transport/http/response"
+	relrepo "genealogy-tree/internal/features/relationships/repository"
 	"net/http"
 )
 
@@ -49,6 +50,10 @@ func (h *RelationshipsHTTPHandler) CreateRelationship(w http.ResponseWriter, r *
 	if err != nil {
 		if errors.Is(err, coreerrors.ErrAmbiguousFamily) {
 			corehttp.Error(w, err, "несколько подходящих семей; укажите family_id")
+			return
+		}
+		if errors.Is(err, relrepo.ErrDuplicate) {
+			corehttp.Error(w, err, "Такая связь уже существует")
 			return
 		}
 		corehttp.Error(w, err, "could not create relationship")

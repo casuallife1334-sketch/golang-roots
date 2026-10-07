@@ -26,6 +26,14 @@ func (r *RelationshipFamilyRepository) CreateRelationshipWithFamily(
 	}
 	defer tx.Rollback(ctx)
 
+	// Serialize relationship/family creation within a tree. Otherwise concurrent
+	// requests can both see no matching family and create two for the same child.
+	if _, err := tx.Exec(ctx, `
+		SELECT pg_advisory_xact_lock(hashtextextended('relationship-family:' || $1::text, 0))
+	`, treeID); err != nil {
+		return domain.Relationship{}, err
+	}
+
 	relationship, err := r.relationships.CreateRelationshipTx(ctx, tx, treeID, input)
 	if err != nil {
 		return domain.Relationship{}, err
