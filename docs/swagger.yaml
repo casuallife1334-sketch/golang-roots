@@ -81,6 +81,13 @@ definitions:
         example: short human-readable message
         type: string
     type: object
+  genealogy-tree_internal_features_exchange_gedcom.Issue:
+    properties:
+      line:
+        type: integer
+      message:
+        type: string
+    type: object
   internal_features_auth_transport_http.LoginRequest:
     properties:
       email:
@@ -151,6 +158,38 @@ definitions:
       tree_id:
         example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
         type: string
+    type: object
+  internal_features_exchange_transport_http.ImportResponse:
+    properties:
+      format:
+        example: gedcom
+        type: string
+      persons_imported:
+        example: 12
+        type: integer
+      relationships_imported:
+        example: 18
+        type: integer
+    type: object
+  internal_features_exchange_transport_http.PreviewResponse:
+    properties:
+      errors:
+        items:
+          $ref: '#/definitions/genealogy-tree_internal_features_exchange_gedcom.Issue'
+        type: array
+      format:
+        example: gedcom
+        type: string
+      persons:
+        example: 12
+        type: integer
+      relationships:
+        example: 18
+        type: integer
+      warnings:
+        items:
+          $ref: '#/definitions/genealogy-tree_internal_features_exchange_gedcom.Issue'
+        type: array
     type: object
   internal_features_persons_transport_http.CreatePersonRequest:
     properties:
@@ -403,6 +442,44 @@ paths:
       summary: Регистрация пользователя
       tags:
       - auth
+  /imports/preview:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Проверяет GEDCOM-файл без записи в выбранное дерево
+      parameters:
+      - description: Формат файла
+        enum:
+        - gedcom
+        in: query
+        name: format
+        required: true
+        type: string
+      - description: GEDCOM-файл
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат проверки
+          schema:
+            $ref: '#/definitions/internal_features_exchange_transport_http.PreviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Предварительный просмотр GEDCOM
+      tags:
+      - exchange
   /trees:
     get:
       description: Получение деревьев, доступных текущему пользователю
@@ -727,6 +804,91 @@ paths:
       summary: Скачивание документа
       tags:
       - documents
+  /trees/{tree_id}/export:
+    get:
+      description: Экспортирует людей и родственные связи выбранного дерева в GEDCOM
+        5.5.1
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Формат файла
+        enum:
+        - gedcom
+        in: query
+        name: format
+        required: true
+        type: string
+      produces:
+      - application/x-gedcom
+      responses:
+        "200":
+          description: GEDCOM-файл
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Экспорт дерева в GEDCOM
+      tags:
+      - exchange
+  /trees/{tree_id}/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Проверяет и атомарно импортирует людей и родственные связи в выбранное
+        дерево
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Формат файла
+        enum:
+        - gedcom
+        in: query
+        name: format
+        required: true
+        type: string
+      - description: GEDCOM-файл
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Результат импорта
+          schema:
+            $ref: '#/definitions/internal_features_exchange_transport_http.ImportResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: '#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Импорт GEDCOM в дерево
+      tags:
+      - exchange
   /trees/{tree_id}/persons:
     get:
       description: Получение списка людей в генеалогическом дереве

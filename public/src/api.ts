@@ -12,6 +12,8 @@ import {
   relationshipSchema,
   documentSchema,
   loginSchema,
+  gedcomPreviewSchema,
+  gedcomImportSchema,
   listOf,
 } from "./data/schemas";
 export { ApiError, setUnauthorizedHandler } from "./data/http";
@@ -121,4 +123,22 @@ export const api = {
     request<void>(`/trees/${treeId}/persons/${id}/photo`, "void", {
       method: "DELETE",
     }),
+  previewGedcom: (file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return request("/imports/preview?format=gedcom", gedcomPreviewSchema, {
+      method: "POST",
+      body,
+    });
+  },
+  importGedcom: (treeId: string, file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return request(`/trees/${treeId}/import?format=gedcom`, gedcomImportSchema, {
+      method: "POST",
+      body,
+    });
+  },
+  exportGedcom: (treeId: string) =>
+    request<Blob>(`/trees/${treeId}/export?format=gedcom`, "file"),
 };

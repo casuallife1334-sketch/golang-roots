@@ -19,6 +19,9 @@ import (
 	docrepo "genealogy-tree/internal/features/documents/repository"
 	docservice "genealogy-tree/internal/features/documents/service"
 	dochttp "genealogy-tree/internal/features/documents/transport/http"
+	exchangerepo "genealogy-tree/internal/features/exchange/repository"
+	exchangeservice "genealogy-tree/internal/features/exchange/service"
+	exchangehttp "genealogy-tree/internal/features/exchange/transport/http"
 	personrepo "genealogy-tree/internal/features/persons/repository"
 	personservice "genealogy-tree/internal/features/persons/service"
 	personhttp "genealogy-tree/internal/features/persons/transport/http"
@@ -112,6 +115,12 @@ func main() {
 	relationshipsService := relservice.NewRelationshipsService(relationshipsRepository, treesService)
 	relationshipsTransportHTTP := relhttp.NewRelationshipsHTTPHandlers(relationshipsService)
 
+	logger.Debug("initializing feature", zap.String("feature", "exchange"))
+
+	exchangeRepository := exchangerepo.NewExchangeRepository(pool)
+	exchangeService := exchangeservice.NewExchangeService(exchangeRepository, treesService)
+	exchangeTransportHTTP := exchangehttp.NewExchangeHTTPHandler(exchangeService)
+
 	logger.Debug("initializing feature", zap.String("feature", "documents"))
 
 	documentsRepository := docrepo.NewDocumentsRepository(pool)
@@ -137,6 +146,7 @@ func main() {
 		treesTransportHTTP.Routes(),
 		personsTransportHTTP.Routes(),
 		relationshipsTransportHTTP.Routes(),
+		exchangeTransportHTTP.Routes(),
 		documentsTransportHTTP.Routes(),
 	}
 	for _, routes := range protectedRoutes {

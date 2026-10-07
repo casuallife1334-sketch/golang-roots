@@ -780,6 +780,119 @@ button:focus-visible {
   padding: 21px;
   min-height: 205px;
 }
+.exchange-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.exchange-settings .card-title {
+  margin-bottom: 2px;
+}
+.gedcom-picker {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+.gedcom-dropzone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 40px 10px 11px;
+  border: 1px dashed #bcc8d3;
+  border-radius: 10px;
+  background: #fbfcfd;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+.gedcom-dropzone:hover,
+.gedcom-picker.is-dragging .gedcom-dropzone {
+  border-color: #54708b;
+  background: #f3f7fa;
+}
+.gedcom-picker:focus-within .gedcom-dropzone {
+  border-color: #54708b;
+  box-shadow: 0 0 0 3px rgba(84, 112, 139, 0.14);
+}
+.gedcom-dropzone-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #e8eff5;
+  color: #365a78;
+}
+.gedcom-dropzone-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+.gedcom-dropzone-copy strong,
+.gedcom-dropzone-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gedcom-dropzone-copy strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+.gedcom-dropzone-copy small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.gedcom-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.gedcom-file-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.gedcom-file-remove:hover {
+  background: #e8edf1;
+  color: var(--text);
+}
+.exchange-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.exchange-preview {
+  display: grid;
+  gap: 10px;
+  padding-top: 4px;
+}
+.exchange-preview p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.exchange-issue {
+  display: block;
+}
+.exchange-issues {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
 .tree-settings {
   display: flex;
   flex-direction: column;

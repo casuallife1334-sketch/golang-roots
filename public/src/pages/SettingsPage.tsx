@@ -1,15 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Download,
+  FileUp,
   GitBranch,
   LogOut,
   Monitor,
   Palette,
   Trash2,
+  UploadCloud,
   UserRound,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, ApiError } from "../api";
+import { api } from "../api";
 import { useAuth } from "../auth";
 import { Button, Field, Modal, Notice, SavedBadge, Select } from "../shared/ui";
 import { formatDate } from "../utils";
@@ -36,6 +40,12 @@ export function SettingsPage() {
   const [treeName, setTreeName] = useState("");
   const [modal, setModal] = useState(false);
   const [message, setMessage] = useState("");
+  const [gedcomFile, setGedcomFile] = useState<File | null>(null);
+  const [gedcomPreview, setGedcomPreview] = useState<
+    Awaited<ReturnType<typeof api.previewGedcom>> | null
+  >(null);
+  const [confirmImport, setConfirmImport] = useState(false);
+  const [draggingGedcom, setDraggingGedcom] = useState(false);
   const key = `roots:preferences:v1:${user?.id}`;
   useEffect(() => {
     const next = readPreferences(key);
@@ -82,6 +92,45 @@ export function SettingsPage() {
       navigate("/trees");
     },
   });
+  const previewImport = useMutation({
+    mutationFn: () => api.previewGedcom(gedcomFile!),
+    onSuccess: (result) => setGedcomPreview(result),
+  });
+  const importGedcom = useMutation({
+    mutationFn: () => api.importGedcom(current!.id, gedcomFile!),
+    onSuccess: async (result) => {
+      setConfirmImport(false);
+      setGedcomPreview(null);
+      setGedcomFile(null);
+      await Promise.all([
+        query.invalidateQueries({
+          queryKey: keys.people(user?.id, current!.id),
+        }),
+        query.invalidateQueries({
+          queryKey: keys.relationships(user?.id, current!.id),
+        }),
+      ]);
+      setMessage(
+        `Импортировано людей: ${result.persons_imported}, связей: ${result.relationships_imported}`,
+      );
+    },
+  });
+  const exportGedcom = useMutation({
+    mutationFn: () => api.exportGedcom(current!.id),
+    onSuccess: (file) => downloadFile(file, `${current?.name || "tree"}.ged`),
+  });
+  const canWrite = current
+    ? current.role
+      ? current.role === "owner" || current.role === "editor"
+      : current.owner_id === user?.id
+    : false;
+  const selectGedcomFile = (file?: File) => {
+    if (!file) return;
+    setGedcomFile(file);
+    setGedcomPreview(null);
+    previewImport.reset();
+    importGedcom.reset();
+  };
   return (
     <div className="content-page settings-page">
       <header className="topbar">
@@ -121,6 +170,134 @@ export function SettingsPage() {
             <LogOut size={16} />
             Выйти из аккаунта
           </button>
+        </section>
+        <section className="settings-card exchange-settings">
+          <div className="card-title">
+            <FileUp size={20} />
+            <div>
+              <h2>GEDCOM</h2>
+              <p>Импорт и экспорт людей и родственных связей</p>
+            </div>
+          </div>
+          {!current ? (
+            <p className="muted">Сначала создайте дерево.</p>
+          ) : (
+            <>
+              <div className="field">
+                <span>Файл для импорта</span>
+                <div
+                  className={`gedcom-picker ${draggingGedcom ? "is-dragging" : ""}`}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setDraggingGedcom(true);
+                  }}
+                  onDragLeave={() => setDraggingGedcom(false)}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    setDraggingGedcom(false);
+                    selectGedcomFile(event.dataTransfer.files[0]);
+                  }}
+                >
+                  <label className="gedcom-dropzone" htmlFor="gedcom-file">
+                    <span className="gedcom-dropzone-icon">
+                      <UploadCloud size={22} />
+                    </span>
+                    <span className="gedcom-dropzone-copy">
+                      <strong>
+                        {gedcomFile ? gedcomFile.name : "Выберите GEDCOM-файл"}
+                      </strong>
+                      <small>
+                        {gedcomFile
+                          ? `${formatFileSize(gedcomFile.size)} · нажмите для замены`
+                          : "или перетащите его сюда"}
+                      </small>
+                    </span>
+                  </label>
+                  <input
+                    id="gedcom-file"
+                    className="gedcom-file-input"
+                    type="file"
+                    accept=".ged,.gedcom,application/x-gedcom,text/plain"
+                    onChange={(event) => selectGedcomFile(event.target.files?.[0])}
+                  />
+                  {gedcomFile && (
+                    <button
+                      className="gedcom-file-remove"
+                      type="button"
+                      aria-label="Удалить выбранный GEDCOM-файл"
+                      onClick={() => {
+                        setGedcomFile(null);
+                        setGedcomPreview(null);
+                        previewImport.reset();
+                        importGedcom.reset();
+                      }}
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+                <small className="field-hint">
+                  GEDCOM 5.5.1 · до 20 МБ
+                </small>
+              </div>
+              {previewImport.error && <Notice>{previewImport.error.message}</Notice>}
+              {importGedcom.error && <Notice>{importGedcom.error.message}</Notice>}
+              <div className="exchange-actions">
+                {gedcomFile && (
+                  <Button
+                    variant="secondary"
+                    loading={previewImport.isPending}
+                    onClick={() => previewImport.mutate()}
+                  >
+                    Проверить файл
+                  </Button>
+                )}
+                <Button
+                  variant="secondary"
+                  loading={exportGedcom.isPending}
+                  onClick={() => exportGedcom.mutate()}
+                >
+                  <Download size={16} /> Экспортировать текущее дерево
+                </Button>
+              </div>
+              {gedcomPreview && (
+                <div className="exchange-preview">
+                  <strong>Результат проверки</strong>
+                  <p>
+                    Людей: {gedcomPreview.persons}, связей: {gedcomPreview.relationships}
+                  </p>
+                  {gedcomPreview.errors.length > 0 && (
+                    <Notice>
+                      <div className="exchange-issues">
+                        {gedcomPreview.errors.map((issue) => (
+                          <span
+                            className="exchange-issue"
+                            key={`${issue.line}-${issue.message}`}
+                          >
+                            {issue.line ? `Строка ${issue.line}: ` : ""}
+                            {issue.message}
+                          </span>
+                        ))}
+                      </div>
+                    </Notice>
+                  )}
+                  {gedcomPreview.warnings.length > 0 && (
+                    <Notice type="success">
+                      Предупреждений: {gedcomPreview.warnings.length}. Часть неподдерживаемых или неполных записей будет пропущена.
+                    </Notice>
+                  )}
+                  {!gedcomPreview.errors.length && (
+                    <Button
+                      disabled={!canWrite}
+                      onClick={() => setConfirmImport(true)}
+                    >
+                      Импортировать в «{current.name}»
+                    </Button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </section>
         <section className="settings-card">
           <div className="card-title">
@@ -248,9 +425,45 @@ export function SettingsPage() {
           </div>
         </Modal>
       )}
+      {confirmImport && current && gedcomFile && gedcomPreview && (
+        <Modal
+          title="Импортировать GEDCOM?"
+          onClose={() => setConfirmImport(false)}
+          busy={importGedcom.isPending}
+        >
+          <div className="confirm-content">
+            <Notice>
+              В дерево «{current.name}» будут добавлены {gedcomPreview.persons} людей и {gedcomPreview.relationships} связей. Уже существующие записи не изменятся.
+            </Notice>
+            <div className="modal-actions">
+              <Button variant="secondary" onClick={() => setConfirmImport(false)}>
+                Отмена
+              </Button>
+              <Button loading={importGedcom.isPending} onClick={() => importGedcom.mutate()}>
+                Импортировать
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
+
+function downloadFile(file: Blob, name: string) {
+  const url = URL.createObjectURL(file);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function formatFileSize(size: number) {
+  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} КБ`;
+  return `${(size / (1024 * 1024)).toFixed(1)} МБ`;
+}
+
 function Toggle({
   label,
   description,

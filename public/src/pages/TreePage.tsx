@@ -26,6 +26,8 @@ function TreeScreen({ treeId }: { treeId?: string }) {
   const [selectedId, setSelectedId] = useState<string | null>(
     params.get("person"),
   );
+  const [focusId, setFocusId] = useState<string | null>(params.get("person"));
+  const [focusRequest, setFocusRequest] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialog, setDialog] = useState<
     "tree" | "person" | "relationship" | null
@@ -46,8 +48,10 @@ function TreeScreen({ treeId }: { treeId?: string }) {
   useEffect(() => {
     setSelectedId(params.get("person"));
   }, [params]);
-  const select = (id: string | null) => {
+  const select = (id: string | null, focus = false) => {
     setSelectedId(id);
+    setFocusId(focus ? id : null);
+    if (id && focus) setFocusRequest((request) => request + 1);
     const next = new URLSearchParams(params);
     if (id) next.set("person", id);
     else next.delete("person");
@@ -116,7 +120,7 @@ function TreeScreen({ treeId }: { treeId?: string }) {
                   <button
                     key={person.id}
                     onClick={() => {
-                      select(person.id);
+                      select(person.id, true);
                       setSearch("");
                     }}
                   >
@@ -172,7 +176,9 @@ function TreeScreen({ treeId }: { treeId?: string }) {
                   people={people.data}
                   relationships={relationships.data}
                   selectedId={selected?.id}
-                  onSelect={(person) => select(person.id)}
+                  focusId={focusId ?? undefined}
+                  focusRequest={focusRequest}
+                  onSelect={(person) => select(person.id, true)}
                 />
               </div>
             </ErrorBoundary>
@@ -210,7 +216,7 @@ function TreeScreen({ treeId }: { treeId?: string }) {
               setDialog("person");
             }}
             onAddRelationship={() => setDialog("relationship")}
-            onSelectPerson={(person) => select(person.id)}
+            onSelectPerson={(person) => select(person.id, true)}
           />
         )}
       </div>

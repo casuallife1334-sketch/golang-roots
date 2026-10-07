@@ -16,16 +16,21 @@ export function FamilyGraph({
   people,
   relationships,
   selectedId,
+  focusId,
+  focusRequest,
   onSelect,
 }: {
   treeId: string;
   people: Person[];
   relationships: Relationship[];
   selectedId?: string;
+  focusId?: string;
+  focusRequest: number;
   onSelect: (person: Person) => void;
 }) {
   const prefs = usePreferences();
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const [viewportReady, setViewportReady] = useState(false);
   const graph = useMemo(
     () => buildGraph(people, relationships),
     [people, relationships],
@@ -55,7 +60,7 @@ export function FamilyGraph({
         edges={graph.edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        fitView
+        fitView={!focusId}
         fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
         minZoom={0.1}
         maxZoom={2}
@@ -63,10 +68,15 @@ export function FamilyGraph({
         nodesConnectable={false}
         nodesDraggable={false}
         onlyRenderVisibleElements
+        onInit={() => setViewportReady(true)}
         onNodeClick={(_, node) => onSelect(node.data.person)}
       >
         <Viewport
           container={container}
+          nodes={graph.nodes}
+          focusId={focusId}
+          focusRequest={focusRequest}
+          viewportReady={viewportReady}
           topology={JSON.stringify([
             graph.nodes.map((node) => [node.id, node.position]),
             graph.edges.map((edge) => edge.id),

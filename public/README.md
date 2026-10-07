@@ -55,12 +55,13 @@ npm run test:e2e
 - `/login`, `/register`, проверка `/users/me`, logout и обработка 401/403;
 - выбор, создание, переименование и удаление деревьев;
 - реальные persons, relationships и фотографии через scoped API;
+- preview, импорт и экспорт людей и связей в GEDCOM 5.5.1;
 - вычисляемая страница «Семьи» без отдельного backend endpoint;
 - локальные настройки отображения под ключом user ID;
 - React Flow-граф с детерминированной раскладкой parent-child/spouse связей;
 - пустые, загрузочные и ошибочные состояния.
 
-Референсы из `../docs/design-references` использованы как визуальное направление. Не реализованы функции, которых нет в API: приглашения, editor/viewer управление, timeline, GEDCOM, premium, 2FA, refresh token и смена профиля.
+Референсы из `../docs/design-references` использованы как визуальное направление. Не реализованы функции, которых нет в API: приглашения, editor/viewer управление, timeline, premium, 2FA, refresh token и смена профиля.
 
 ## Архитектура frontend
 

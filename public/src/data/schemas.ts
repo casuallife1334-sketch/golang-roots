@@ -61,3 +61,19 @@ export const loginSchema = z.object({
   token_type: z.string(),
   expires_in: z.number(),
 });
+export const exchangeIssueSchema = z.object({
+  line: z.number().optional(),
+  message: z.string(),
+});
+export const gedcomPreviewSchema = z.object({
+  format: z.literal("gedcom"),
+  persons: z.number(),
+  relationships: z.number(),
+  warnings: z.array(exchangeIssueSchema).default([]),
+  errors: z.array(exchangeIssueSchema).default([]),
+});
+export const gedcomImportSchema = z.object({
+  format: z.literal("gedcom"),
+  persons_imported: z.number(),
+  relationships_imported: z.number(),
+});

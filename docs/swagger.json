@@ -113,6 +113,65 @@
                 }
             }
         },
+        "/imports/preview": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Проверяет GEDCOM-файл без записи в выбранное дерево",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exchange"
+                ],
+                "summary": "Предварительный просмотр GEDCOM",
+                "parameters": [
+                    {
+                        "enum": [
+                            "gedcom"
+                        ],
+                        "type": "string",
+                        "description": "Формат файла",
+                        "name": "format",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "GEDCOM-файл",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результат проверки",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_exchange_transport_http.PreviewResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "Payload Too Large",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/trees": {
             "get": {
                 "security": [
@@ -606,6 +665,134 @@
                     },
                     "404": {
                         "description": "Document not found",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/trees/{tree_id}/export": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Экспортирует людей и родственные связи выбранного дерева в GEDCOM 5.5.1",
+                "produces": [
+                    "application/x-gedcom"
+                ],
+                "tags": [
+                    "exchange"
+                ],
+                "summary": "Экспорт дерева в GEDCOM",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "gedcom"
+                        ],
+                        "type": "string",
+                        "description": "Формат файла",
+                        "name": "format",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "GEDCOM-файл",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/trees/{tree_id}/import": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Проверяет и атомарно импортирует людей и родственные связи в выбранное дерево",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exchange"
+                ],
+                "summary": "Импорт GEDCOM в дерево",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "gedcom"
+                        ],
+                        "type": "string",
+                        "description": "Формат файла",
+                        "name": "format",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "GEDCOM-файл",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Результат импорта",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_exchange_transport_http.ImportResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "Payload Too Large",
                         "schema": {
                             "$ref": "#/definitions/genealogy-tree_internal_core_transport_http_response.ErrorResponse"
                         }
@@ -1524,6 +1711,17 @@
                 }
             }
         },
+        "genealogy-tree_internal_features_exchange_gedcom.Issue": {
+            "type": "object",
+            "properties": {
+                "line": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_features_auth_transport_http.LoginRequest": {
             "type": "object",
             "properties": {
@@ -1621,6 +1819,52 @@
                 "tree_id": {
                     "type": "string",
                     "example": "01JQ2Q4K7Y8F6M2Z3N4P5R6S7T"
+                }
+            }
+        },
+        "internal_features_exchange_transport_http.ImportResponse": {
+            "type": "object",
+            "properties": {
+                "format": {
+                    "type": "string",
+                    "example": "gedcom"
+                },
+                "persons_imported": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "relationships_imported": {
+                    "type": "integer",
+                    "example": 18
+                }
+            }
+        },
+        "internal_features_exchange_transport_http.PreviewResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/genealogy-tree_internal_features_exchange_gedcom.Issue"
+                    }
+                },
+                "format": {
+                    "type": "string",
+                    "example": "gedcom"
+                },
+                "persons": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "relationships": {
+                    "type": "integer",
+                    "example": 18
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/genealogy-tree_internal_features_exchange_gedcom.Issue"
+                    }
                 }
             }
         },

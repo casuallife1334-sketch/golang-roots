@@ -66,10 +66,11 @@ async function fixture(
   meStatus = 200,
   photoFailuresBeforeSuccess = 1,
   role: "owner" | "editor" | "viewer" = "owner",
+  extraPeople: ReturnType<typeof person>[] = [],
 ) {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  let people = structuredClone(initial);
+  let people = [...structuredClone(initial), ...extraPeople];
   let relations = structuredClone(relationships);
   let documents = [
     {
@@ -235,12 +236,16 @@ test("cards retain coordinates on selection, family paths and modal keyboard wor
       ]),
     );
   const before = await positions();
+  await expect(page.locator(".react-flow__edge-family")).toHaveCount(3);
   await page.locator('[data-id="childA"]').click();
   await expect(page.locator(".detail-panel h2")).toContainText("childA");
+  await centeredCard(page, "childA");
   await page.locator('[data-id="childB"]').click();
-  // Opening the panel temporarily virtualizes cards until ResizeObserver fits the viewport.
-  await expect.poll(positions).toEqual(before);
-  await expect(page.locator(".react-flow__edge-family")).toHaveCount(3);
+  await centeredCard(page, "childB");
+  // Virtualization changes which nodes are mounted; their graph positions stay fixed.
+  const after = await positions();
+  for (const [id, position] of after)
+    expect(position).toBe(before.find(([originalId]) => originalId === id)?.[1]);
   const sizes = await cards.evaluateAll((nodes) =>
     nodes.map((node) => [
       (node as HTMLElement).offsetWidth,
@@ -250,6 +255,18 @@ test("cards retain coordinates on selection, family paths and modal keyboard wor
   expect(
     sizes.every(([width, height]) => width === 240 && height === 132),
   ).toBe(true);
+  const canvas = await page.locator(".react-flow").boundingBox();
+  expect(canvas).not.toBeNull();
+  await page.mouse.move(canvas!.x + 40, canvas!.y + 80);
+  await page.mouse.down();
+  await page.mouse.move(canvas!.x + 200, canvas!.y + 120, { steps: 10 });
+  await page.mouse.up();
+  await expect.poll(async () => {
+    const card = await page.locator('[data-id="childB"]').boundingBox();
+    return card ? Math.abs(card.x + card.width / 2 - (canvas!.x + canvas!.width / 2)) : 0;
+  }).toBeGreaterThan(60);
+  await page.locator('[data-id="childB"]').click();
+  await centeredCard(page, "childB");
   await page
     .getByRole("button", { name: "Добавить человека", exact: true })
     .click();
@@ -262,6 +279,58 @@ test("cards retain coordinates on selection, family paths and modal keyboard wor
     fullPage: true,
   });
 });
+test("person list and relatives center their cards in the tree", async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  await page.goto("/trees/tree/persons");
+  await page.getByRole("button", { name: "grandchild Тестовый" }).click();
+  await expect(page.locator(".detail-panel h2")).toContainText("grandchild");
+  await centeredCard(page, "grandchild");
+
+  await page.getByRole("button", { name: "Родственники" }).click();
+  await page.getByRole("button", { name: /childA Тестовый/ }).click();
+  await expect(page.locator(".detail-panel h2")).toContainText("childA");
+  await centeredCard(page, "childA");
+  expect(state.errors).toEqual([]);
+});
+test("tree search centers the selected person", async ({ page }) => {
+  const state = await fixture(page);
+  await page.goto("/trees/tree");
+  await page.getByRole("textbox", { name: "Поиск по людям" }).fill("grandchild");
+  await page.getByRole("button", { name: "grandchild Тестовый" }).click();
+  await expect(page.locator(".detail-panel h2")).toContainText("grandchild");
+  await centeredCard(page, "grandchild");
+  expect(state.errors).toEqual([]);
+});
+test("person list finds a virtualized card in a large tree", async ({ page }) => {
+  const state = await fixture(
+    page,
+    200,
+    1,
+    "owner",
+    Array.from({ length: 160 }, (_, index) =>
+      person(`extra${index.toString().padStart(3, "0")}`),
+    ),
+  );
+  await page.goto("/trees/tree/persons");
+  await page.getByRole("button", { name: "extra159 Тестовый" }).click();
+  await expect(page.locator(".detail-panel h2")).toContainText("extra159");
+  await centeredCard(page, "extra159");
+  expect(state.errors).toEqual([]);
+});
+async function centeredCard(page: Page, id: string) {
+  await expect.poll(async () => {
+    const canvas = await page.locator(".react-flow").boundingBox();
+    const card = await page.locator(`[data-id="${id}"]`).boundingBox();
+    if (!canvas || !card) return false;
+    return (
+      Math.abs(card.x + card.width / 2 - (canvas.x + canvas.width / 2)) < 12 &&
+      Math.abs(card.y + card.height / 2 - (canvas.y + canvas.height / 2)) < 12 &&
+      card.width >= 290
+    );
+  }).toBe(true);
+}
 test("failed photo upload retries without creating a duplicate", async ({
   page,
 }) => {
@@ -455,6 +524,7 @@ test("relationship comment is edited, cleared and keeps other metadata", async (
 }) => {
   const state = await fixture(page);
   await page.goto("/trees/tree?person=childA");
+  await centeredCard(page, "childA");
   const cards = page.locator(".react-flow__node-person");
   const positions = () =>
     cards.evaluateAll((nodes) =>
@@ -480,7 +550,10 @@ test("relationship comment is edited, cleared and keeps other metadata", async (
   expect(state.relations.find((item) => item.id === "xz")?.metadata.source).toBe(
     "archive",
   );
-  await expect.poll(positions).toEqual(before);
+  await centeredCard(page, "childA");
+  const after = await positions();
+  for (const [id, position] of after)
+    expect(position).toBe(before.find(([originalId]) => originalId === id)?.[1]);
 
   const grandchildRow = page.locator(".relation-row", { hasText: "grandchild" });
   await grandchildRow
