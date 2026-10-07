@@ -15,8 +15,11 @@ type PersonsRepository interface {
 	GetPerson(context.Context, string, string) (domain.Person, error)
 	GetPersons(context.Context, string) ([]domain.Person, error)
 	PatchPerson(context.Context, string, string, domain.PatchPersonInput) (domain.Person, error)
-	DeletePerson(context.Context, string, string) error
 	UpdatePersonPhoto(context.Context, string, string, *string) (domain.Person, error)
+}
+
+type PersonDeleter interface {
+	DeletePerson(context.Context, string, string) error
 }
 
 type TreeAccess interface {
@@ -32,10 +35,11 @@ type PhotoStorage interface {
 
 type PersonsService struct {
 	personsRepository PersonsRepository
+	personDeleter     PersonDeleter
 	fileStorage       PhotoStorage
 	treeAccess        TreeAccess
 }
 
-func NewPersonsService(personsRepository PersonsRepository, fileStorage PhotoStorage, treeAccess TreeAccess) *PersonsService {
-	return &PersonsService{personsRepository: personsRepository, fileStorage: fileStorage, treeAccess: treeAccess}
+func NewPersonsService(personsRepository PersonsRepository, personDeleter PersonDeleter, fileStorage PhotoStorage, treeAccess TreeAccess) *PersonsService {
+	return &PersonsService{personsRepository: personsRepository, personDeleter: personDeleter, fileStorage: fileStorage, treeAccess: treeAccess}
 }

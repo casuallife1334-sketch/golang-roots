@@ -34,6 +34,33 @@ it("does not end a session on a server error", async () => {
   expect(unauthorized).not.toHaveBeenCalled();
   clean();
 });
+it("shows the family selection hint returned with a conflict", async () => {
+  const message = "несколько подходящих семей; укажите family_id";
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ error: "conflict", message }), {
+        status: 409,
+      }),
+    ),
+  );
+  await expect(request("/relationships", "void")).rejects.toMatchObject({
+    status: 409,
+    message,
+  });
+});
+it("uses the duplicate fallback for a conflict without an explanation", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ error: "conflict" }), { status: 409 }),
+    ),
+  );
+  await expect(request("/relationships", "void")).rejects.toMatchObject({
+    status: 409,
+    message: "Такая запись уже существует",
+  });
+});
 it("ignores unauthorized responses from an old token", async () => {
   sessionStorage.setItem(TOKEN_KEY, "old");
   const unauthorized = vi.fn(),

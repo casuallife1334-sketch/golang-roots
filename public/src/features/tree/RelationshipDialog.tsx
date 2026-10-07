@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "../../api";
+import { useAuth } from "../../auth";
 import type {
   Person,
   Relationship,
@@ -8,10 +9,11 @@ import type {
   Tree,
 } from "../../types";
 import { fullName } from "../../utils";
-import { useTreeCache } from "../../data/queries";
+import { familiesQuery, useTreeCache } from "../../data/queries";
 import { Button, Field, Modal, Notice, Select } from "../../shared/ui";
 import { relationshipProblem } from "../../graph/model";
 import { CommentEditor } from "./CommentEditor";
+import { familyOptionLabel } from "./familyOptionLabel";
 
 export function RelationshipDialog({
   tree,
@@ -32,8 +34,11 @@ export function RelationshipDialog({
   const [one, setOne] = useState(selected?.id ?? "");
   const [two, setTwo] = useState("");
   const [comment, setComment] = useState("");
+  const [familyId, setFamilyId] = useState("");
   const [error, setError] = useState("");
   const cache = useTreeCache(tree.id);
+  const { user } = useAuth();
+  const families = useQuery(familiesQuery(user?.id, tree.id));
   const mutation = useMutation({
     mutationFn: (body: RelationshipInput) =>
       api.createRelationship(tree.id, body),
@@ -64,6 +69,7 @@ export function RelationshipDialog({
               ? { direction: "parent" as const }
               : {}),
             metadata: comment.trim() ? { comment: comment.trim() } : {},
+            ...(familyId ? { family_id: familyId } : {}),
           };
           const problem = relationshipProblem(people, relationships, body);
           if (problem) return setError(problem);
@@ -114,6 +120,16 @@ export function RelationshipDialog({
                       {fullName(person)}
                     </option>
                   ))}
+              </Select>
+            </Field>
+            <Field label="Семья (необязательно)">
+              <Select value={familyId} onChange={(event) => setFamilyId(event.target.value)}>
+                <option value="">Выбрать автоматически</option>
+                {(families.data ?? []).map((family) => (
+                  <option key={family.id} value={family.id}>
+                    {familyOptionLabel(family, people)}
+                  </option>
+                ))}
               </Select>
             </Field>
           </fieldset>
