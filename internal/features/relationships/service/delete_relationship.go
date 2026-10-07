@@ -6,5 +6,5 @@ func (s *RelationshipsService) DeleteRelationship(ctx context.Context, userID, t
 	if err := s.treeAccess.CanWriteTree(ctx, userID, treeID); err != nil {
 		return err
 	}
-	return s.relationshipsRepository.DeleteRelationship(ctx, treeID, id)
+	return s.relationshipDeleter.DeleteRelationship(ctx, treeID, id)
 }

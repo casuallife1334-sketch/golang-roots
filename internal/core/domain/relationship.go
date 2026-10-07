@@ -36,6 +36,11 @@ type CreateRelationshipInput struct {
 	Metadata  map[string]any         `json:"metadata"`
 }
 
+type CreateRelationshipCommand struct {
+	Relationship CreateRelationshipInput
+	FamilyID     *string
+}
+
 type PatchRelationshipInput struct {
 	Metadata nullable.Value[map[string]any] `json:"metadata" swaggertype:"object" extensions:"x-nullable"`
 }

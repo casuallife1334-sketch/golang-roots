@@ -19,6 +19,9 @@ import (
 	docrepo "genealogy-tree/internal/features/documents/repository"
 	docservice "genealogy-tree/internal/features/documents/service"
 	dochttp "genealogy-tree/internal/features/documents/transport/http"
+	familyrepo "genealogy-tree/internal/features/families/repository"
+	familyservice "genealogy-tree/internal/features/families/service"
+	familyhttp "genealogy-tree/internal/features/families/transport/http"
 	personrepo "genealogy-tree/internal/features/persons/repository"
 	personservice "genealogy-tree/internal/features/persons/service"
 	personhttp "genealogy-tree/internal/features/persons/transport/http"
@@ -31,6 +34,9 @@ import (
 	usersrepo "genealogy-tree/internal/features/users/repository"
 	usersservice "genealogy-tree/internal/features/users/service"
 	usershttp "genealogy-tree/internal/features/users/transport/http"
+	familylifecyclerepo "genealogy-tree/internal/usecases/family_lifecycle/repository"
+	relationshipfamilyrepo "genealogy-tree/internal/usecases/relationship_family_creation/repository"
+	relationshipfamilyservice "genealogy-tree/internal/usecases/relationship_family_creation/service"
 
 	"go.uber.org/zap"
 
@@ -103,14 +109,35 @@ func main() {
 	logger.Debug("initializing feature", zap.String("feature", "persons"))
 
 	personsRepository := personrepo.NewPersonsRepository(pool)
-	personsService := personservice.NewPersonsService(personsRepository, fileStorage, treesService)
-	personsTransportHTTP := personhttp.NewPersonsHTTPHandlers(personsService)
 
 	logger.Debug("initializing feature", zap.String("feature", "relationships"))
 
 	relationshipsRepository := relrepo.NewRelationshipsRepository(pool)
-	relationshipsService := relservice.NewRelationshipsService(relationshipsRepository, treesService)
-	relationshipsTransportHTTP := relhttp.NewRelationshipsHTTPHandlers(relationshipsService)
+
+	logger.Debug("initializing feature", zap.String("feature", "families"))
+
+	familiesRepository := familyrepo.NewFamiliesRepository(pool)
+	familyLifecycleRepository := familylifecyclerepo.NewRepository(pool, relationshipsRepository, personsRepository, familiesRepository)
+	personsService := personservice.NewPersonsService(personsRepository, familyLifecycleRepository, fileStorage, treesService)
+	personsTransportHTTP := personhttp.NewPersonsHTTPHandlers(personsService)
+	relationshipsService := relservice.NewRelationshipsService(relationshipsRepository, familyLifecycleRepository, treesService)
+	familiesService := familyservice.NewFamiliesService(
+		familiesRepository,
+		familiesRepository,
+		familiesRepository,
+		treesService,
+	)
+	familiesTransportHTTP := familyhttp.NewFamiliesHTTPHandler(familiesService)
+	relationshipFamilyRepository := relationshipfamilyrepo.NewRelationshipFamilyRepository(
+		pool,
+		relationshipsRepository,
+		familiesRepository,
+	)
+	relationshipFamilyCreationService := relationshipfamilyservice.NewRelationshipFamilyCreationService(
+		relationshipFamilyRepository,
+		treesService,
+	)
+	relationshipsTransportHTTP := relhttp.NewRelationshipsHTTPHandlers(relationshipsService, relationshipFamilyCreationService)
 
 	logger.Debug("initializing feature", zap.String("feature", "documents"))
 
@@ -137,6 +164,7 @@ func main() {
 		treesTransportHTTP.Routes(),
 		personsTransportHTTP.Routes(),
 		relationshipsTransportHTTP.Routes(),
+		familiesTransportHTTP.Routes(),
 		documentsTransportHTTP.Routes(),
 	}
 	for _, routes := range protectedRoutes {

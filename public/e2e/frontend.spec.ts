@@ -71,6 +71,16 @@ async function fixture(
   page.on("pageerror", (error) => errors.push(error.message));
   let people = structuredClone(initial);
   let relations = structuredClone(relationships);
+  let families: {
+    id: string;
+    tree_id: string;
+    name: string;
+    metadata: Record<string, unknown>;
+    members: { person_id: string; role: "partner" | "parent" | "child" }[];
+    relationship_ids: string[];
+    created_at: string;
+    updated_at: string;
+  }[] = [];
   let documents = [
     {
       id: "document-xz",
@@ -107,6 +117,55 @@ async function fixture(
           role,
         },
       ]);
+    if (path.includes("/families")) {
+      const parts = path.split("/");
+      const index = parts.indexOf("families");
+      const familyId = parts[index + 1];
+      const family = families.find((item) => item.id === familyId);
+      const resource = parts[index + 2];
+      const resourceId = parts[index + 3];
+      if (!familyId) {
+        if (method === "GET") return json(families);
+        if (method === "POST") {
+          const body = route.request().postDataJSON();
+          const created = {
+            id: `family-${families.length + 1}`,
+            tree_id: tree.id,
+            name: body.name ?? "",
+            metadata: body.metadata ?? {},
+            members: [],
+            relationship_ids: [],
+            created_at: date,
+            updated_at: date,
+          };
+          families.push(created);
+          return json(created, 201);
+        }
+      }
+      if (!family) return json({}, 404);
+      if (!resource) {
+        if (method === "GET") return json(family);
+        if (method === "PATCH") {
+          Object.assign(family, route.request().postDataJSON());
+          return json(family);
+        }
+        if (method === "DELETE") {
+          families = families.filter((item) => item.id !== familyId);
+          return route.fulfill({ status: 204, body: "" });
+        }
+      }
+      if (resource === "members") {
+        if (method === "POST") family.members.push(route.request().postDataJSON());
+        if (method === "DELETE") family.members = family.members.filter((member) => member.person_id !== resourceId);
+        return route.fulfill({ status: 204, body: "" });
+      }
+      if (resource === "relationships") {
+        if (method === "POST") family.relationship_ids.push(route.request().postDataJSON().relationship_id);
+        if (method === "DELETE") family.relationship_ids = family.relationship_ids.filter((id) => id !== resourceId);
+        return route.fulfill({ status: 204, body: "" });
+      }
+      return json({}, 404);
+    }
     if (path.includes("/documents")) {
       const documentId = path.split("/").at(-1)!;
       if (method === "GET" && documentId !== "documents") {
@@ -212,6 +271,9 @@ async function fixture(
   });
   return {
     errors,
+    get families() {
+      return families;
+    },
     get creates() {
       return creates;
     },
@@ -261,6 +323,65 @@ test("cards retain coordinates on selection, family paths and modal keyboard wor
     path: "test-results/tree-reviewed.png",
     fullPage: true,
   });
+});
+test("families can be created, edited, managed and deleted", async ({ page }) => {
+  const state = await fixture(page);
+  await page.goto("/trees/tree/families");
+  await page.getByRole("button", { name: "Создать семью" }).first().click();
+  await page.getByRole("textbox", { name: /Название семьи/ }).fill("Семья Попович");
+  await page.getByRole("button", { name: "Создать семью" }).last().click();
+  await expect(page.getByRole("dialog", { name: "Семья", exact: true })).toBeVisible();
+  await expect(page.locator(".family-card")).toContainText("Семья Попович");
+
+  await page.setViewportSize({ width: 390, height: 760 });
+  await expect(page.locator(".family-editor-modal")).toBeVisible();
+  expect(await page.locator(".family-editor-modal").evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+
+  await page.getByRole("combobox", { name: "Человек" }).selectOption("motherA");
+  await page.getByRole("button", { name: "Добавить участника" }).click();
+  await expect(page.getByRole("button", { name: "Удалить motherA Тестовый из семьи" })).toBeVisible();
+  await page.getByRole("combobox", { name: "Связь из дерева" }).selectOption("ab");
+  await page.getByRole("button", { name: "Привязать связь" }).click();
+  await expect(page.getByRole("button", { name: /Отвязать связь: motherA/ })).toBeVisible();
+
+  await page.getByRole("textbox", { name: /Название семьи/ }).fill("Семья Анны");
+  await page.getByRole("button", { name: "Сохранить изменения" }).click();
+  await expect(page.locator(".family-card")).toContainText("Семья Анны");
+
+  await page.getByRole("button", { name: "Удалить motherA Тестовый из семьи" }).click();
+  await page.getByRole("dialog", { name: "Убрать участника?" }).getByRole("button", { name: "Убрать участника" }).click();
+  await expect(page.getByRole("button", { name: "Удалить motherA Тестовый из семьи" })).toHaveCount(0);
+  await page.getByRole("button", { name: /Отвязать связь: motherA/ }).click();
+  await page.getByRole("dialog", { name: "Отвязать связь?" }).getByRole("button", { name: "Отвязать связь" }).click();
+  await expect(page.getByRole("button", { name: /Отвязать связь: motherA/ })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Удалить семью" }).click();
+  await page.getByRole("dialog", { name: "Удалить семью?" }).getByRole("button", { name: "Удалить семью" }).click();
+  await expect(page.getByText("Семей пока нет")).toBeVisible();
+  expect(state.errors).toEqual([]);
+});
+
+test("viewer cannot manually change families", async ({ page }) => {
+  const state = await fixture(page, 200, 1, "viewer");
+  state.families.push({
+    id: "readonly-family",
+    tree_id: tree.id,
+    name: "Семья для просмотра",
+    metadata: {},
+    members: [{ person_id: "motherA", role: "parent" }],
+    relationship_ids: ["ax"],
+    created_at: date,
+    updated_at: date,
+  });
+  await page.goto("/trees/tree/families");
+  await expect(page.getByRole("button", { name: "Создать семью" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Открыть семью: Семья для просмотра" }).click();
+  await expect(page.getByRole("dialog", { name: "Семья", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Сохранить изменения" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Удалить семью" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Добавить участника" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Привязать связь" })).toHaveCount(0);
 });
 test("failed photo upload retries without creating a duplicate", async ({
   page,

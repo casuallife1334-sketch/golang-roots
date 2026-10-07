@@ -37,6 +37,21 @@ export const relationshipSchema = z.object({
   created_at: z.string(),
   updated_at: z.string().nullish(),
 });
+export const familySchema = z.object({
+  id: z.string().min(1),
+  tree_id: z.string(),
+  name: z.string(),
+  metadata: z.record(z.unknown()).default({}),
+  members: z.array(
+    z.object({
+      person_id: z.string(),
+      role: z.enum(["partner", "parent", "child"]),
+    }),
+  ),
+  relationship_ids: z.array(z.string()),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
 export const documentSchema = z.object({
   id: z.string().min(1),
   tree_id: z.string(),

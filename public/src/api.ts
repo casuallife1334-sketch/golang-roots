@@ -3,6 +3,7 @@ import type {
   PersonInput,
   RelationshipInput,
   DocumentOwnerType,
+  Family,
 } from "./types";
 import { request } from "./data/http";
 import {
@@ -10,6 +11,7 @@ import {
   treeSchema,
   personSchema,
   relationshipSchema,
+  familySchema,
   documentSchema,
   loginSchema,
   listOf,
@@ -76,6 +78,62 @@ export const api = {
     request<void>(`/trees/${treeId}/relationships/${id}`, "void", {
       method: "DELETE",
     }),
+  families: (treeId: string, signal?: AbortSignal) =>
+    request(`/trees/${treeId}/families`, listOf(familySchema), { signal }),
+  family: (treeId: string, id: string) =>
+    request(`/trees/${treeId}/families/${id}`, familySchema),
+  createFamily: (treeId: string, body: { name?: string; metadata?: Record<string, unknown> }) =>
+    request<Family>(
+      `/trees/${treeId}/families`,
+      familySchema,
+      json("POST", body),
+    ),
+  patchFamily: (
+    treeId: string,
+    id: string,
+    body: { name?: string; metadata?: Record<string, unknown> },
+  ) =>
+    request(`/trees/${treeId}/families/${id}`, familySchema, json("PATCH", body)),
+  deleteFamily: (treeId: string, id: string) =>
+    request<void>(`/trees/${treeId}/families/${id}`, "void", {
+      method: "DELETE",
+    }),
+  addFamilyMember: (
+    treeId: string,
+    familyId: string,
+    body: { person_id: string; role: "partner" | "parent" | "child" },
+  ) =>
+    request<void>(
+      `/trees/${treeId}/families/${familyId}/members`,
+      "void",
+      json("POST", body),
+    ),
+  removeFamilyMember: (treeId: string, familyId: string, personId: string) =>
+    request<void>(
+      `/trees/${treeId}/families/${familyId}/members/${personId}`,
+      "void",
+      { method: "DELETE" },
+    ),
+  attachFamilyRelationship: (
+    treeId: string,
+    familyId: string,
+    relationshipId: string,
+  ) =>
+    request<void>(
+      `/trees/${treeId}/families/${familyId}/relationships`,
+      "void",
+      json("POST", { relationship_id: relationshipId }),
+    ),
+  detachFamilyRelationship: (
+    treeId: string,
+    familyId: string,
+    relationshipId: string,
+  ) =>
+    request<void>(
+      `/trees/${treeId}/families/${familyId}/relationships/${relationshipId}`,
+      "void",
+      { method: "DELETE" },
+    ),
   documents: (
     treeId: string,
     ownerType: DocumentOwnerType,

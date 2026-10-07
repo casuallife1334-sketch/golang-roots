@@ -616,6 +616,12 @@ button:focus-visible {
   gap: 7px;
   margin-left: auto;
 }
+.family-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
 .persons-table-wrap {
   overflow-x: auto;
   padding: 0 28px 28px;
@@ -676,6 +682,7 @@ button:focus-visible {
   padding: 0 28px 28px;
 }
 .family-card {
+  width: 100%;
   min-height: 180px;
   border: 1px solid var(--border);
   border-radius: 11px;
@@ -708,26 +715,23 @@ button:focus-visible {
 .family-card h3 {
   margin: 0 0 5px;
   font-size: 15px;
+  overflow-wrap: anywhere;
 }
-.family-card p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.family-card-info {
+  min-width: 0;
 }
 .family-card small {
   display: block;
   color: #59616b;
-  margin-top: 13px;
+  margin-top: 8px;
 }
 .family-grid.list {
   grid-template-columns: 1fr;
 }
 .family-grid.list .family-card {
   min-height: 100px;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 18px;
 }
@@ -735,7 +739,131 @@ button:focus-visible {
   margin: 0;
 }
 .family-grid.list .family-card h3 {
-  margin-left: auto;
+  margin: 0;
+}
+.family-grid.list .family-card small {
+  margin: 0;
+  white-space: nowrap;
+}
+.family-editor-layout.with-members {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 24px;
+}
+.family-editor-form,
+.family-editor-management {
+  min-width: 0;
+  align-content: start;
+}
+.family-editor-actions {
+  flex-wrap: wrap;
+}
+.family-editor-actions.with-delete {
+  justify-content: space-between;
+}
+.family-editor-management {
+  display: grid;
+  gap: 18px;
+}
+.family-editor-section {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.family-editor-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.family-editor-section-heading h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.family-editor-section-heading span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.family-editor-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 7px;
+}
+.family-editor-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+.family-editor-item-text {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+.family-editor-item-text strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.family-editor-item-text small,
+.family-editor-hint {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.family-editor-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  color: var(--muted);
+  background: transparent;
+}
+.family-editor-icon:hover {
+  background: #e5e9ed;
+  color: var(--text);
+}
+.family-editor-icon.danger:hover {
+  background: #fbe5e2;
+  color: #a24b48;
+}
+.family-editor-add {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+.family-editor-pickers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 0.6fr);
+  gap: 8px;
+}
+.family-editor-add > .button {
+  justify-self: start;
+}
+.family-editor-hint {
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .families-page .page-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .family-heading-actions {
+    justify-content: flex-start;
+  }
+  .family-editor-pickers {
+    grid-template-columns: 1fr;
+  }
 }
 .skeleton-grid {
   display: grid;
@@ -1123,6 +1251,9 @@ button:focus-visible {
   }
 }
 @media (max-width: 850px) {
+  .family-editor-layout.with-members {
+    grid-template-columns: 1fr;
+  }
   .sidebar {
     width: 70px;
     padding: 18px 10px;

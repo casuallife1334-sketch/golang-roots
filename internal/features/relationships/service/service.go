@@ -14,6 +14,9 @@ type RelationshipsRepository interface {
 	GetRelationship(context.Context, string, string) (domain.Relationship, error)
 	GetRelationships(context.Context, string, string) ([]domain.Relationship, error)
 	PatchRelationship(context.Context, string, string, domain.PatchRelationshipInput) (domain.Relationship, error)
+}
+
+type RelationshipDeleter interface {
 	DeleteRelationship(context.Context, string, string) error
 }
 
@@ -24,9 +27,10 @@ type TreeAccess interface {
 
 type RelationshipsService struct {
 	relationshipsRepository RelationshipsRepository
+	relationshipDeleter     RelationshipDeleter
 	treeAccess              TreeAccess
 }
 
-func NewRelationshipsService(relationshipsRepository RelationshipsRepository, treeAccess TreeAccess) *RelationshipsService {
-	return &RelationshipsService{relationshipsRepository: relationshipsRepository, treeAccess: treeAccess}
+func NewRelationshipsService(relationshipsRepository RelationshipsRepository, relationshipDeleter RelationshipDeleter, treeAccess TreeAccess) *RelationshipsService {
+	return &RelationshipsService{relationshipsRepository: relationshipsRepository, relationshipDeleter: relationshipDeleter, treeAccess: treeAccess}
 }

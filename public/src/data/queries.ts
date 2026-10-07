@@ -1,13 +1,14 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import { useAuth } from "../auth";
-import type { DocumentOwnerType, Person, Relationship } from "../types";
+import type { DocumentOwnerType, Family, Person, Relationship } from "../types";
 
 export const keys = {
   trees: (user?: string) => ["trees", user] as const,
   people: (user?: string, tree?: string) => ["people", user, tree] as const,
   relationships: (user?: string, tree?: string) =>
     ["relationships", user, tree] as const,
+  families: (user?: string, tree?: string) => ["families", user, tree] as const,
   documents: (
     user?: string,
     tree?: string,
@@ -35,6 +36,12 @@ export const relationshipsQuery = (user?: string, tree?: string) =>
     queryFn: ({ signal }) => api.relationships(tree!, signal),
     enabled: Boolean(user && tree),
   });
+export const familiesQuery = (user?: string, tree?: string) =>
+  queryOptions({
+    queryKey: keys.families(user, tree),
+    queryFn: ({ signal }) => api.families(tree!, signal),
+    enabled: Boolean(user && tree),
+  });
 export const documentsQuery = (
   user?: string,
   tree?: string,
@@ -54,7 +61,18 @@ export function useTreeData(treeId?: string) {
     : trees.data?.[0];
   const people = useQuery(peopleQuery(user?.id, tree?.id));
   const relationships = useQuery(relationshipsQuery(user?.id, tree?.id));
-  return { trees, tree, people, relationships };
+  const families = useQuery(familiesQuery(user?.id, tree?.id));
+  return { trees, tree, people, relationships, families };
+}
+export function useFamiliesData(treeId?: string) {
+  const { user } = useAuth();
+  const trees = useQuery(treeQuery(user?.id));
+  const tree = treeId
+    ? trees.data?.find((item) => item.id === treeId)
+    : trees.data?.[0];
+  const people = useQuery(peopleQuery(user?.id, tree?.id));
+  const families = useQuery(familiesQuery(user?.id, tree?.id));
+  return { trees, tree, people, families };
 }
 export function useTreeCache(treeId: string) {
   const { user } = useAuth();
@@ -81,6 +99,7 @@ export function useTreeCache(treeId: string) {
         query.invalidateQueries({
           queryKey: keys.relationships(user?.id, treeId),
         }),
+        query.invalidateQueries({ queryKey: keys.families(user?.id, treeId) }),
       ]),
     refreshPhoto: (id: string) =>
       query.invalidateQueries({ queryKey: keys.photo(user?.id, treeId, id) }),

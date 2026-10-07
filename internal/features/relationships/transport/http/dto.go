@@ -12,6 +12,7 @@ type CreateRelationshipRequest struct {
 	Type      domain.RelationshipType       `json:"type" example:"parent_child"`
 	Direction *domain.RelationshipDirection `json:"direction,omitempty" example:"parent"`
 	Metadata  map[string]any                `json:"metadata" swaggertype:"object"`
+	FamilyID  *string                       `json:"family_id,omitempty" example:"01JQ2Q4K9Y8F6M2Z3N4P5R6S7V"`
 }
 
 type PatchRelationshipRequest struct {

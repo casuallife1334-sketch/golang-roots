@@ -15,6 +15,23 @@ definitions:
     x-enum-varnames:
     - DocumentOwnerPerson
     - DocumentOwnerRelationship
+  genealogy-tree_internal_core_domain.FamilyMember:
+    properties:
+      person_id:
+        type: string
+      role:
+        $ref: '#/definitions/genealogy-tree_internal_core_domain.FamilyMemberRole'
+    type: object
+  genealogy-tree_internal_core_domain.FamilyMemberRole:
+    enum:
+    - partner
+    - parent
+    - child
+    type: string
+    x-enum-varnames:
+    - FamilyMemberPartner
+    - FamilyMemberParent
+    - FamilyMemberChild
   genealogy-tree_internal_core_domain.Gender:
     enum:
     - male
@@ -152,6 +169,47 @@ definitions:
         example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
         type: string
     type: object
+  internal_features_families_transport_http.CreateFamilyRequest:
+    properties:
+      metadata:
+        type: object
+      name:
+        type: string
+    type: object
+  internal_features_families_transport_http.FamilyResponse:
+    properties:
+      created_at:
+        example: "2026-02-26T10:30:00Z"
+        type: string
+      id:
+        example: 01JQ2Q4K9Y8F6M2Z3N4P5R6S7V
+        type: string
+      members:
+        items:
+          $ref: '#/definitions/genealogy-tree_internal_core_domain.FamilyMember'
+        type: array
+      metadata:
+        type: object
+      name:
+        type: string
+      relationship_ids:
+        items:
+          type: string
+        type: array
+      tree_id:
+        example: 01JQ2Q4K7Y8F6M2Z3N4P5R6S7T
+        type: string
+      updated_at:
+        example: "2026-02-26T10:35:00Z"
+        type: string
+    type: object
+  internal_features_families_transport_http.PatchFamilyRequest:
+    properties:
+      metadata:
+        type: object
+      name:
+        type: string
+    type: object
   internal_features_persons_transport_http.CreatePersonRequest:
     properties:
       birth_date:
@@ -232,6 +290,9 @@ definitions:
         allOf:
         - $ref: '#/definitions/genealogy-tree_internal_core_domain.RelationshipDirection'
         example: parent
+      family_id:
+        example: 01JQ2Q4K9Y8F6M2Z3N4P5R6S7V
+        type: string
       metadata:
         type: object
       person1_id:
@@ -727,6 +788,133 @@ paths:
       summary: Скачивание документа
       tags:
       - documents
+  /trees/{tree_id}/families:
+    get:
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_features_families_transport_http.FamilyResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Список семей
+      tags:
+      - families
+    post:
+      consumes:
+      - application/json
+      description: Создание пустого контейнера семьи
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: CreateFamily тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_families_transport_http.CreateFamilyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_features_families_transport_http.FamilyResponse'
+      security:
+      - BearerAuth: []
+      summary: Создание семьи
+      tags:
+      - families
+  /trees/{tree_id}/families/{family_id}:
+    delete:
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: ULID семьи
+        in: path
+        name: family_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Удаление семьи
+      tags:
+      - families
+    get:
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: ULID семьи
+        in: path
+        name: family_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_features_families_transport_http.FamilyResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение семьи
+      tags:
+      - families
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: ULID дерева
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: ULID семьи
+        in: path
+        name: family_id
+        required: true
+        type: string
+      - description: PatchFamily тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_features_families_transport_http.PatchFamilyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_features_families_transport_http.FamilyResponse'
+      security:
+      - BearerAuth: []
+      summary: Изменение семьи
+      tags:
+      - families
   /trees/{tree_id}/persons:
     get:
       description: Получение списка людей в генеалогическом дереве

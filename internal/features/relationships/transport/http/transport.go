@@ -8,19 +8,26 @@ import (
 )
 
 type RelationshipsService interface {
-	CreateRelationship(context.Context, string, string, domain.CreateRelationshipInput) (domain.Relationship, error)
 	GetRelationship(context.Context, string, string, string) (domain.Relationship, error)
 	GetRelationships(context.Context, string, string, string) ([]domain.Relationship, error)
 	PatchRelationship(context.Context, string, string, string, domain.PatchRelationshipInput) (domain.Relationship, error)
 	DeleteRelationship(context.Context, string, string, string) error
 }
 
-type RelationshipsHTTPHandler struct {
-	relationshipsService RelationshipsService
+type RelationshipCreator interface {
+	CreateRelationship(context.Context, string, string, domain.CreateRelationshipCommand) (domain.Relationship, error)
 }
 
-func NewRelationshipsHTTPHandlers(relationshipsService RelationshipsService) *RelationshipsHTTPHandler {
-	return &RelationshipsHTTPHandler{relationshipsService: relationshipsService}
+type RelationshipsHTTPHandler struct {
+	relationshipsService RelationshipsService
+	relationshipCreator  RelationshipCreator
+}
+
+func NewRelationshipsHTTPHandlers(relationshipsService RelationshipsService, relationshipCreator RelationshipCreator) *RelationshipsHTTPHandler {
+	return &RelationshipsHTTPHandler{
+		relationshipsService: relationshipsService,
+		relationshipCreator:  relationshipCreator,
+	}
 }
 
 func (h *RelationshipsHTTPHandler) Routes() []server.Route {

@@ -613,6 +613,208 @@
                 }
             }
         },
+        "/trees/{tree_id}/families": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "families"
+                ],
+                "summary": "Список семей",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_features_families_transport_http.FamilyResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Создание пустого контейнера семьи",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "families"
+                ],
+                "summary": "Создание семьи",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "CreateFamily тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_families_transport_http.CreateFamilyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_families_transport_http.FamilyResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/trees/{tree_id}/families/{family_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "families"
+                ],
+                "summary": "Получение семьи",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ULID семьи",
+                        "name": "family_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_families_transport_http.FamilyResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "families"
+                ],
+                "summary": "Удаление семьи",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ULID семьи",
+                        "name": "family_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "families"
+                ],
+                "summary": "Изменение семьи",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ULID дерева",
+                        "name": "tree_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ULID семьи",
+                        "name": "family_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "PatchFamily тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_families_transport_http.PatchFamilyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_families_transport_http.FamilyResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/trees/{tree_id}/persons": {
             "get": {
                 "security": [
@@ -1432,6 +1634,30 @@
                 "DocumentOwnerRelationship"
             ]
         },
+        "genealogy-tree_internal_core_domain.FamilyMember": {
+            "type": "object",
+            "properties": {
+                "person_id": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/genealogy-tree_internal_core_domain.FamilyMemberRole"
+                }
+            }
+        },
+        "genealogy-tree_internal_core_domain.FamilyMemberRole": {
+            "type": "string",
+            "enum": [
+                "partner",
+                "parent",
+                "child"
+            ],
+            "x-enum-varnames": [
+                "FamilyMemberPartner",
+                "FamilyMemberParent",
+                "FamilyMemberChild"
+            ]
+        },
         "genealogy-tree_internal_core_domain.Gender": {
             "type": "string",
             "enum": [
@@ -1624,6 +1850,67 @@
                 }
             }
         },
+        "internal_features_families_transport_http.CreateFamilyRequest": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_features_families_transport_http.FamilyResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-02-26T10:30:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K9Y8F6M2Z3N4P5R6S7V"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/genealogy-tree_internal_core_domain.FamilyMember"
+                    }
+                },
+                "metadata": {
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "relationship_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tree_id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K7Y8F6M2Z3N4P5R6S7T"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-02-26T10:35:00Z"
+                }
+            }
+        },
+        "internal_features_families_transport_http.PatchFamilyRequest": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_features_persons_transport_http.CreatePersonRequest": {
             "type": "object",
             "properties": {
@@ -1741,6 +2028,10 @@
                         }
                     ],
                     "example": "parent"
+                },
+                "family_id": {
+                    "type": "string",
+                    "example": "01JQ2Q4K9Y8F6M2Z3N4P5R6S7V"
                 },
                 "metadata": {
                     "type": "object"
