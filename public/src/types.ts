@@ -2,7 +2,6 @@ export type Gender = "male" | "female" | "other";
 export type RelationshipType = "parent_child" | "spouse";
 export type RelationshipDirection = "parent" | "child";
 export type DocumentOwnerType = "person" | "relationship";
-export type FamilyMemberRole = "partner" | "parent" | "child";
 
 export interface User {
   id: string;
@@ -56,24 +55,9 @@ export interface RelationshipInput {
   type: RelationshipType;
   direction?: RelationshipDirection;
   metadata?: Record<string, unknown>;
-  family_id?: string;
 }
 export interface PatchRelationshipInput {
   metadata?: Record<string, unknown>;
-}
-export interface FamilyMember {
-  person_id: string;
-  role: FamilyMemberRole;
-}
-export interface Family {
-  id: string;
-  tree_id: string;
-  name: string;
-  metadata: Record<string, unknown>;
-  members: FamilyMember[];
-  relationship_ids: string[];
-  created_at: string;
-  updated_at: string;
 }
 export interface DocumentOwner {
   type: DocumentOwnerType;

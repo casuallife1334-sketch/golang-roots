@@ -15,5 +15,5 @@ func (s *PersonsService) DeletePerson(ctx context.Context, userID, treeID, id st
 			return err
 		}
 	}
-	return s.personDeleter.DeletePerson(ctx, treeID, id)
+	return s.personsRepository.DeletePerson(ctx, treeID, id)
 }

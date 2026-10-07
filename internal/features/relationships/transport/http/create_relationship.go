@@ -1,12 +1,9 @@
 package http
 
 import (
-	"errors"
 	"genealogy-tree/internal/core/domain"
-	coreerrors "genealogy-tree/internal/core/errors"
 	"genealogy-tree/internal/core/transport/http/request"
 	corehttp "genealogy-tree/internal/core/transport/http/response"
-	relrepo "genealogy-tree/internal/features/relationships/repository"
 	"net/http"
 )
 
@@ -36,26 +33,15 @@ func (h *RelationshipsHTTPHandler) CreateRelationship(w http.ResponseWriter, r *
 		corehttp.Error(w, err, "request body contains invalid JSON")
 		return
 	}
-	command := domain.CreateRelationshipCommand{
-		Relationship: domain.CreateRelationshipInput{
-			Person1ID: requestBody.Person1ID,
-			Person2ID: requestBody.Person2ID,
-			Type:      requestBody.Type,
-			Direction: requestBody.Direction,
-			Metadata:  requestBody.Metadata,
-		},
-		FamilyID: requestBody.FamilyID,
+	in := domain.CreateRelationshipInput{
+		Person1ID: requestBody.Person1ID,
+		Person2ID: requestBody.Person2ID,
+		Type:      requestBody.Type,
+		Direction: requestBody.Direction,
+		Metadata:  requestBody.Metadata,
 	}
-	rel, err := h.relationshipCreator.CreateRelationship(r.Context(), userID, treeID, command)
+	rel, err := h.relationshipsService.CreateRelationship(r.Context(), userID, treeID, in)
 	if err != nil {
-		if errors.Is(err, coreerrors.ErrAmbiguousFamily) {
-			corehttp.Error(w, err, "несколько подходящих семей; укажите family_id")
-			return
-		}
-		if errors.Is(err, relrepo.ErrDuplicate) {
-			corehttp.Error(w, err, "Такая связь уже существует")
-			return
-		}
 		corehttp.Error(w, err, "could not create relationship")
 		return
 	}

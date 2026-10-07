@@ -58,7 +58,7 @@ func TestPatchRelationshipMetadataSemantics(t *testing.T) {
 	t.Run("absent metadata is a repository no-op", func(t *testing.T) {
 		repository := &relationshipRepositoryStub{}
 		access := &treeAccessStub{}
-		service := NewRelationshipsService(repository, repository, access)
+		service := NewRelationshipsService(repository, access)
 
 		if _, err := service.PatchRelationship(context.Background(), "user", "tree", "relationship", domain.PatchRelationshipInput{}); err != nil {
 			t.Fatal(err)
@@ -74,7 +74,7 @@ func TestPatchRelationshipMetadataSemantics(t *testing.T) {
 	t.Run("null metadata is invalid", func(t *testing.T) {
 		repository := &relationshipRepositoryStub{}
 		access := &treeAccessStub{}
-		service := NewRelationshipsService(repository, repository, access)
+		service := NewRelationshipsService(repository, access)
 
 		_, err := service.PatchRelationship(context.Background(), "user", "tree", "relationship", domain.PatchRelationshipInput{
 			Metadata: nullable.Value[map[string]any]{Set: true},
@@ -90,7 +90,7 @@ func TestPatchRelationshipMetadataSemantics(t *testing.T) {
 	t.Run("object metadata is normalized and updated", func(t *testing.T) {
 		metadata := map[string]any{"comment": "  note  ", "other": float64(1)}
 		repository := &relationshipRepositoryStub{}
-		service := NewRelationshipsService(repository, repository, &treeAccessStub{})
+		service := NewRelationshipsService(repository, &treeAccessStub{})
 
 		if _, err := service.PatchRelationship(context.Background(), "user", "tree", "relationship", domain.PatchRelationshipInput{
 			Metadata: nullable.Value[map[string]any]{Set: true, Value: &metadata},
